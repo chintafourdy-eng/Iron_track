@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IronTrack – Deteksi Dini Risiko Anemia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C0392B;
+    --red-deep: #8B1A1A;
+    --red-light: #E8534A;
+    --peach: #F7C5B5;
+    --cream: #FDF6F0;
+    --dark: #1A0A08;
+    --mid: #4A2020;
+    --muted: #9B7070;
+    --white: #FFFFFF;
+    --success: #27AE60;
+    --warning: #F39C12;
+    --info: #2980B9;
+    --radius: 16px;
+    --shadow: 0 8px 32px rgba(139,26,26,0.13);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--dark); min-height:100vh; }
+
+  /* ── SCREEN SYSTEM ── */
+  .screen { display:none; min-height:100vh; }
+  .screen.active { display:flex; }
+
+  /* ══════════════════════════════
+     AUTH SCREENS
+  ══════════════════════════════ */
+  #screen-landing, #screen-login, #screen-register {
+    flex-direction:column; align-items:center; justify-content:center;
+    background: linear-gradient(145deg, #8B1A1A 0%, #C0392B 45%, #E8534A 100%);
+    padding:24px;
+    position:relative; overflow:hidden;
+  }
+  #screen-landing::before, #screen-login::before, #screen-register::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(0,0,0,0.15) 0%, transparent 60%);
+  }
+  .auth-card {
+    background:var(--white); border-radius:24px; padding:40px 36px;
+    width:100%; max-width:420px; box-shadow:0 24px 64px rgba(0,0,0,0.25);
+    position:relative; z-index:1;
+    animation: slideUp .5s cubic-bezier(.22,.68,0,1.2) both;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+
+  .logo-wrap { text-align:center; margin-bottom:28px; }
+  .logo-icon { width:72px; height:72px; background:linear-gradient(135deg,#C0392B,#E8534A);
+    border-radius:20px; display:inline-flex; align-items:center; justify-content:center;
+    font-size:32px; margin-bottom:12px; box-shadow:0 8px 24px rgba(192,57,43,.35); }
+  .logo-title { font-family:'Playfair Display',serif; font-size:28px; color:var(--red-deep); line-height:1; }
+  .logo-sub { font-size:12px; color:var(--muted); margin-top:4px; letter-spacing:.5px; }
+
+  .auth-title { font-family:'Playfair Display',serif; font-size:22px; color:var(--dark); margin-bottom:6px; }
+  .auth-desc { font-size:13px; color:var(--muted); margin-bottom:24px; }
+
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:12px; font-weight:600; color:var(--mid); margin-bottom:6px; letter-spacing:.4px; text-transform:uppercase; }
+  .field input, .field select {
+    width:100%; padding:12px 16px; border:2px solid #EDE0DC; border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-size:14px; color:var(--dark); background:var(--cream);
+    transition:.2s; outline:none;
+  }
+  .field input:focus, .field select:focus { border-color:var(--red); background:var(--white); }
+  .field .hint { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  .btn-primary {
+    width:100%; padding:14px; background:linear-gradient(135deg,#C0392B,#E8534A);
+    color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:600;
+    cursor:pointer; transition:.2s; margin-top:4px; font-family:'DM Sans',sans-serif;
+    letter-spacing:.3px;
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(192,57,43,.4); }
+  .btn-secondary {
+    width:100%; padding:12px; background:transparent; color:var(--red);
+    border:2px solid var(--red); border-radius:10px; font-size:14px; font-weight:600;
+    cursor:pointer; transition:.2s; margin-top:8px; font-family:'DM Sans',sans-serif;
+  }
+  .btn-secondary:hover { background:var(--red); color:#fff; }
+  .auth-switch { text-align:center; font-size:13px; color:var(--muted); margin-top:20px; }
+  .auth-switch a { color:var(--red); font-weight:600; cursor:pointer; text-decoration:none; }
+  .auth-switch a:hover { text-decoration:underline; }
+
+  /* Landing */
+  .landing-hero { text-align:center; position:relative; z-index:1; margin-bottom:32px; }
+  .landing-hero h1 { font-family:'Playfair Display',serif; font-size:42px; color:#fff; line-height:1.15; }
+  .landing-hero p { color:rgba(255,255,255,.8); font-size:15px; margin-top:12px; max-width:320px; margin-left:auto; margin-right:auto; }
+  .landing-stats { display:flex; gap:16px; margin-bottom:28px; }
+  .stat-bubble { flex:1; background:rgba(255,255,255,.15); border-radius:16px; padding:14px 10px; text-align:center; backdrop-filter:blur(8px); }
+  .stat-bubble .num { font-family:'Playfair Display',serif; font-size:22px; color:#fff; font-weight:900; }
+  .stat-bubble .lbl { font-size:10px; color:rgba(255,255,255,.75); margin-top:2px; }
+  .landing-card { background:var(--white); border-radius:24px; padding:28px; width:100%; max-width:420px; position:relative; z-index:1; box-shadow:0 24px 64px rgba(0,0,0,.25); animation: slideUp .5s .15s both; }
+
+  /* ══════════════════════════════
+     APP SHELL
+  ══════════════════════════════ */
+  #screen-app { flex-direction:column; background:var(--cream); }
+  .topbar {
+    background:linear-gradient(135deg,#8B1A1A,#C0392B);
+    padding:16px 20px 14px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 4px 16px rgba(139,26,26,.3);
+  }
+  .topbar-left { display:flex; align-items:center; gap:10px; }
+  .topbar-logo { font-family:'Playfair Display',serif; font-size:20px; color:#fff; }
+  .topbar-user { font-size:12px; color:rgba(255,255,255,.7); }
+  .topbar-avatar { width:36px; height:36px; background:rgba(255,255,255,.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; }
+
+  .content-area { flex:1; overflow-y:auto; padding:0 0 80px; }
+  .page { display:none; padding:20px; animation:fadeIn .3s; }
+  .page.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Bottom Nav */
+  .bottom-nav {
+    position:fixed; bottom:0; left:0; right:0;
+    background:#fff; border-top:1px solid #EDE0DC;
+    display:flex; padding:8px 0; box-shadow:0 -4px 20px rgba(0,0,0,.08);
+    z-index:100;
+  }
+  .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px; transition:.2s; }
+  .nav-item .nav-icon { font-size:22px; }
+  .nav-item .nav-label { font-size:10px; color:var(--muted); font-weight:500; }
+  .nav-item.active .nav-label { color:var(--red); }
+  .nav-item.active .nav-icon { transform:scale(1.15); }
+
+  /* ══════════════════════════════
+     CARDS / COMPONENTS
+  ══════════════════════════════ */
+  .card { background:#fff; border-radius:var(--radius); padding:20px; margin-bottom:16px; box-shadow:var(--shadow); }
+  .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .card-title { font-family:'Playfair Display',serif; font-size:17px; color:var(--dark); }
+  .badge { font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; }
+  .badge-danger { background:#FDECEA; color:var(--red); }
+  .badge-warning { background:#FEF3E2; color:#E67E22; }
+  .badge-success { background:#E8F8EF; color:var(--success); }
+  .badge-info { background:#E8F4FD; color:var(--info); }
+
+  /* Progress bar */
+  .progress-bar { height:8px; background:#F0E8E8; border-radius:4px; overflow:hidden; margin-top:6px; }
+  .progress-fill { height:100%; border-radius:4px; transition:width .6s cubic-bezier(.22,.68,0,1.2); }
+
+  /* Feature grid */
+  .feature-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .feature-card {
+    background:#fff; border-radius:14px; padding:18px 14px; text-align:center;
+    cursor:pointer; transition:.2s; box-shadow:0 4px 16px rgba(139,26,26,.07);
+    border:2px solid transparent;
+  }
+  .feature-card:hover { border-color:var(--red); transform:translateY(-3px); }
+  .feature-card .f-icon { font-size:28px; margin-bottom:8px; }
+  .feature-card .f-title { font-size:13px; font-weight:600; color:var(--dark); }
+  .feature-card .f-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+
+  /* Greeting */
+  .greeting-banner {
+    background:linear-gradient(135deg,#8B1A1A,#C0392B);
+    border-radius:20px; padding:20px; margin-bottom:16px; color:#fff;
+    position:relative; overflow:hidden;
+  }
+  .greeting-banner::after { content:'🩸'; position:absolute; right:-10px; top:-10px; font-size:80px; opacity:.1; }
+  .greeting-banner h2 { font-family:'Playfair Display',serif; font-size:20px; margin-bottom:4px; }
+  .greeting-banner p { font-size:13px; opacity:.85; }
+
+  /* Form fields in app */
+  .app-field { margin-bottom:14px; }
+  .app-field label { font-size:12px; font-weight:600; color:var(--mid); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+  .app-field input, .app-field select, .app-field textarea {
+    width:100%; padding:11px 14px; border:2px solid #EDE0DC; border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-size:14px; background:var(--cream); outline:none; transition:.2s;
+  }
+  .app-field input:focus, .app-field select:focus, .app-field textarea:focus { border-color:var(--red); background:#fff; }
+  .app-field textarea { min-height:80px; resize:vertical; }
+
+  .btn-sm {
+    padding:9px 18px; background:linear-gradient(135deg,#C0392B,#E8534A);
+    color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif; transition:.2s;
+  }
+  .btn-sm:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(192,57,43,.35); }
+  .btn-outline-sm { padding:8px 16px; background:transparent; color:var(--red); border:2px solid var(--red); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:.2s; }
+  .btn-outline-sm:hover { background:var(--red); color:#fff; }
+
+  .section-title { font-family:'Playfair Display',serif; font-size:16px; color:var(--dark); margin-bottom:12px; }
+
+  /* Symptom chips */
+  .chip-wrap { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { padding:7px 14px; border:2px solid #EDE0DC; border-radius:20px; font-size:13px; cursor:pointer; transition:.2s; color:var(--mid); background:#fff; }
+  .chip.active { border-color:var(--red); background:#FDECEA; color:var(--red); font-weight:600; }
+
+  /* Food list */
+  .food-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid #F5ECEC; }
+  .food-item:last-child { border-bottom:none; }
+  .food-icon { width:40px; height:40px; background:var(--peach); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .food-info { flex:1; }
+  .food-name { font-size:14px; font-weight:600; color:var(--dark); }
+  .food-iron { font-size:12px; color:var(--muted); }
+  .food-bar { margin-top:4px; }
+  .food-pct { font-size:11px; color:var(--red); font-weight:600; }
+
+  /* Period tracker */
+  .period-calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:12px 0; }
+  .cal-day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; transition:.15s; }
+  .cal-day.period { background:#FDECEA; color:var(--red); font-weight:700; }
+  .cal-day.fertile { background:#E8F8EF; color:var(--success); }
+  .cal-day.today { background:var(--red); color:#fff; border-radius:50%; }
+  .cal-day.other { color:#ccc; }
+  .cal-day:hover:not(.today) { background:#F5ECEC; }
+  .cal-header { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; }
+  .cal-header span { text-align:center; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; }
+
+  /* Edu cards */
+  .edu-card { border-radius:14px; overflow:hidden; margin-bottom:12px; box-shadow:0 4px 16px rgba(139,26,26,.08); cursor:pointer; transition:.2s; }
+  .edu-card:hover { transform:translateY(-3px); }
+  .edu-thumb { height:120px; display:flex; align-items:center; justify-content:center; font-size:48px; }
+  .edu-body { background:#fff; padding:14px; }
+  .edu-tag { font-size:10px; font-weight:700; color:var(--red); text-transform:uppercase; letter-spacing:.5px; }
+  .edu-title { font-family:'Playfair Display',serif; font-size:15px; color:var(--dark); margin-top:4px; }
+  .edu-desc { font-size:12px; color:var(--muted); margin-top:4px; }
+
+  /* Result */
+  .result-ring { width:140px; height:140px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; margin:0 auto 16px; }
+  .result-ring.high { background:linear-gradient(135deg,#FDECEA,#FAC5C0); border:4px solid var(--red); }
+  .result-ring.medium { background:linear-gradient(135deg,#FEF3E2,#FAE0A0); border:4px solid var(--warning); }
+  .result-ring.low { background:linear-gradient(135deg,#E8F8EF,#A0F0C0); border:4px solid var(--success); }
+  .result-ring .r-emoji { font-size:44px; }
+  .result-ring .r-label { font-size:11px; font-weight:700; margin-top:4px; }
+  .result-ring.high .r-label { color:var(--red); }
+  .result-ring.medium .r-label { color:var(--warning); }
+  .result-ring.low .r-label { color:var(--success); }
+
+  .recommend-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #F5ECEC; }
+  .recommend-item:last-child { border-bottom:none; }
+  .rec-dot { width:8px; height:8px; border-radius:50%; background:var(--red); margin-top:5px; flex-shrink:0; }
+  .rec-text { font-size:13px; color:var(--dark); line-height:1.5; }
+
+  /* Toast */
+  .toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:#1A0A08; color:#fff; padding:12px 24px; border-radius:12px; font-size:13px; font-weight:500; opacity:0; pointer-events:none; z-index:9999; transition:.3s; white-space:nowrap; max-width:90vw; text-align:center; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--peach); border-radius:2px; }
+
+  /* Gamification */
+  .xp-bar-wrap { background:#F5ECEC; border-radius:20px; height:12px; overflow:hidden; margin-top:6px; }
+  .xp-bar { height:100%; background:linear-gradient(90deg,var(--red),var(--red-light)); border-radius:20px; transition:width .8s cubic-bezier(.22,.68,0,1.2); }
+  .badge-grid { display:flex; gap:10px; flex-wrap:wrap; }
+  .badge-item { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .badge-item .b-icon { width:52px; height:52px; border-radius:50%; background:var(--peach); display:flex; align-items:center; justify-content:center; font-size:22px; border:3px solid #fff; box-shadow:0 4px 12px rgba(192,57,43,.15); }
+  .badge-item .b-icon.locked { filter:grayscale(1) opacity(.4); }
+  .badge-item .b-name { font-size:10px; font-weight:600; color:var(--mid); text-align:center; max-width:56px; }
+
+  /* Alert */
+  .alert { padding:12px 16px; border-radius:10px; font-size:13px; margin-bottom:12px; display:flex; gap:10px; align-items:flex-start; }
+  .alert-danger { background:#FDECEA; color:#8B1A1A; border-left:4px solid var(--red); }
+  .alert-warning { background:#FEF3E2; color:#7D5100; border-left:4px solid var(--warning); }
+  .alert-success { background:#E8F8EF; color:#1A5C35; border-left:4px solid var(--success); }
+
+  /* Divider */
+  .divider { border:none; border-top:1px solid #EDE0DC; margin:16px 0; }
+
+  /* Profile */
+  .profile-avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--red),var(--red-light)); display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 8px; }
+  .profile-name { font-family:'Playfair Display',serif; font-size:20px; text-align:center; color:var(--dark); }
+  .profile-email { font-size:13px; color:var(--muted); text-align:center; margin-bottom:20px; }
+  .setting-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #F5ECEC; cursor:pointer; }
+  .setting-row:last-child { border-bottom:none; }
+  .setting-label { font-size:14px; color:var(--dark); display:flex; align-items:center; gap:10px; }
+  .setting-arrow { color:var(--muted); font-size:16px; }
+
+  /* Toggle */
+  .toggle { width:44px; height:24px; background:#EDE0DC; border-radius:12px; position:relative; cursor:pointer; transition:.2s; }
+  .toggle.on { background:var(--red); }
+  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.2s; box-shadow:0 2px 4px rgba(0,0,0,.2); }
+  .toggle.on::after { left:23px; }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+    z-index:300; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open { display:flex; }
+
+  @media(max-width:400px) { .feature-grid { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ══════ LANDING ══════ -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-hero">
+    <div style="font-size:64px;margin-bottom:12px;">🩸</div>
+    <h1>Iron<br>Track</h1>
+    <p>Deteksi dini dan pemantauan risiko anemia untuk kesehatan yang lebih baik</p>
+  </div>
+  <div class="landing-stats">
+    <div class="stat-bubble"><div class="num">32%</div><div class="lbl">Remaja putri berisiko anemia</div></div>
+    <div class="stat-bubble"><div class="num">24/7</div><div class="lbl">Pantau kapan saja</div></div>
+  </div>
+  <div class="landing-card">
+    <button class="btn-primary" onclick="showScreen('login')">Masuk ke IronTrack</button>
+    <button class="btn-secondary" onclick="showScreen('register')" style="margin-top:10px">Buat Akun Baru</button>
+    <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:14px;">Versi 1.0 · Universitas Esa Unggul 2026</p>
+  </div>
+</div>
+
+<!-- ══════ LOGIN ══════ -->
+<div id="screen-login" class="screen">
+  <div class="auth-card">
+    <div class="logo-wrap">
+      <div class="logo-icon">🩸</div>
+      <div class="logo-title">IronTrack</div>
+      <div class="logo-sub">DETEKSI DINI ANEMIA</div>
+    </div>
+    <div class="auth-title">Selamat Datang</div>
+    <p class="auth-desc">Masuk untuk memantau kesehatan Anda</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="contoh@email.com">
+    </div>
+    <div class="field">
+      <label>Kata Sandi</label>
+      <input type="password" id="login-pass" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Masuk</button>
+    <div class="auth-switch">Belum punya akun? <a onclick="showScreen('register')">Daftar Sekarang</a></div>
+    <div class="auth-switch" style="margin-top:8px"><a onclick="showScreen('landing')">← Kembali</a></div>
+  </div>
+</div>
+
+<!-- ══════ REGISTER ══════ -->
+<div id="screen-register" class="screen">
+  <div class="auth-card" style="max-height:95vh;overflow-y:auto">
+    <div class="logo-wrap">
+      <div class="logo-icon">🩸</div>
+      <div class="logo-title">IronTrack</div>
+      <div class="logo-sub">BUAT AKUN BARU</div>
+    </div>
+
+    <div class="field">
+      <label>Nama Lengkap</label>
+      <input type="text" id="reg-name" placeholder="Nama kamu">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="contoh@email.com">
+    </div>
+    <div class="field">
+      <label>Kata Sandi</label>
+      <input type="password" id="reg-pass" placeholder="Min. 6 karakter">
+    </div>
+
+    <!-- FIX: tanggal lahir field yang benar (id="reg-dob"), tidak lagi berupa dokumen HTML terpisah -->
+    <div class="field">
+      <label>Tanggal Lahir</label>
+      <input type="date" id="reg-dob" onchange="hitungUsiaReg()">
+      <p class="hint" id="reg-age-display"></p>
+    </div>
+
+    <div class="field">
+      <label>Berat Badan (kg)</label>
+      <input type="number" id="reg-weight" placeholder="Contoh: 52">
+    </div>
+    <div class="field">
+      <label>Tinggi Badan (cm)</label>
+      <input type="number" id="reg-height" placeholder="Contoh: 158">
+    </div>
+
+    <button class="btn-primary" onclick="doRegister()">Buat Akun</button>
+    <div class="auth-switch">Sudah punya akun? <a onclick="showScreen('login')">Masuk</a></div>
+    <div class="auth-switch" style="margin-top:8px"><a onclick="showScreen('landing')">← Kembali</a></div>
+  </div>
+</div>
+
+<!-- ══════ APP SHELL ══════ -->
+<div id="screen-app" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div style="font-size:22px;">🩸</div>
+      <div>
+        <div class="topbar-logo">IronTrack</div>
+        <div class="topbar-user" id="topbar-name">Halo, Pengguna</div>
+      </div>
+    </div>
+    <div class="topbar-avatar" onclick="navTo('profile')">👤</div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ── BERANDA ── -->
+    <div id="page-home" class="page active">
+      <div class="greeting-banner">
+        <h2 id="greeting-text">Selamat Pagi! 👋</h2>
+        <p>Pantau kesehatanmu hari ini dan tetap semangat!</p>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:10px;">
+          <div>
+            <div style="font-size:10px;opacity:.7;margin-bottom:2px;">LEVEL XP KAMU</div>
+            <div style="font-size:12px;font-weight:600;">⭐ Level 3 – Iron Guardian</div>
+            <div class="xp-bar-wrap" style="width:180px;margin-top:6px;">
+              <div class="xp-bar" id="xp-bar" style="width:65%"></div>
+            </div>
+            <div style="font-size:10px;opacity:.7;margin-top:2px;">650 / 1000 XP</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Score -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Risiko Anemia Kamu</span>
+          <span class="badge badge-warning" id="home-risk-badge">Sedang</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;padding:8px 0;">
+          <div style="position:relative;width:180px;height:100px;">
+            <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" style="width:180px;height:100px;">
+              <path d="M10,100 A90,90 0 0,1 190,100" fill="none" stroke="#F0E8E8" stroke-width="18" stroke-linecap="round"/>
+              <path id="gauge-arc" d="M10,100 A90,90 0 0,1 190,100" fill="none" stroke="#F39C12" stroke-width="18" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="113"/>
+            </svg>
+            <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);text-align:center;">
+              <div style="font-family:'Playfair Display',serif;font-size:30px;color:var(--dark);" id="risk-score">60</div>
+              <div style="font-size:11px;color:var(--muted);">dari 100</div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--muted);">Terakhir diperbarui hari ini</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="section-title">Fitur Utama</div>
+      <div class="feature-grid">
+        <div class="feature-card" onclick="navTo('symptom')">
+          <div class="f-icon">🤒</div>
+          <div class="f-title">Cek Gejala</div>
+          <div class="f-sub">Input gejala harian</div>
+        </div>
+        <div class="feature-card" onclick="navTo('food')">
+          <div class="f-icon">🥗</div>
+          <div class="f-title">Pola Makan</div>
+          <div class="f-sub">Catat asupan zat besi</div>
+        </div>
+        <div class="feature-card" onclick="navTo('period')">
+          <div class="f-icon">📅</div>
+          <div class="f-title">Siklus Haid</div>
+          <div class="f-sub">Lacak menstruasi</div>
+        </div>
+        <div class="feature-card" onclick="navTo('edu')">
+          <div class="f-icon">📚</div>
+          <div class="f-title">Edukasi</div>
+          <div class="f-sub">Artikel & tips</div>
+        </div>
+      </div>
+
+      <!-- TTD Reminder -->
+      <div class="card" style="background:linear-gradient(135deg,#E8F8EF,#D0F0E0);border:2px solid #27AE60;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:32px;">💊</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;color:#1A5C35;font-size:14px;">Pengingat TTD Hari Ini</div>
+            <div style="font-size:12px;color:#2E8B57;margin-top:2px;">Jangan lupa minum Tablet Tambah Darah!</div>
+          </div>
+          <button class="btn-sm" style="background:var(--success);" onclick="markTTD()">✓ Sudah</button>
+        </div>
+      </div>
+
+      <!-- IMT Info -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Status IMT Kamu</div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;text-align:center;background:var(--cream);border-radius:10px;padding:12px;">
+            <div style="font-size:11px;color:var(--muted);">BERAT BADAN</div>
+            <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--dark);" id="home-weight">–</div>
+            <div style="font-size:11px;color:var(--muted);">kg</div>
+          </div>
+          <div style="flex:1;text-align:center;background:var(--cream);border-radius:10px;padding:12px;">
+            <div style="font-size:11px;color:var(--muted);">TINGGI BADAN</div>
+            <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--dark);" id="home-height">–</div>
+            <div style="font-size:11px;color:var(--muted);">cm</div>
+          </div>
+          <div style="flex:1;text-align:center;background:var(--cream);border-radius:10px;padding:12px;">
+            <div style="font-size:11px;color:var(--muted);">IMT</div>
+            <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--red);" id="home-imt">–</div>
+            <div style="font-size:11px;color:var(--muted);" id="home-imt-cat">–</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CEK GEJALA ── -->
+    <div id="page-symptom" class="page">
+      <div class="section-title" style="font-size:20px;">🤒 Cek Gejala Anemia</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Pilih gejala yang kamu rasakan hari ini. Hasilnya akan memperbarui skor risiko kamu.</p>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Gejala Umum</div>
+        <div class="chip-wrap" id="symptom-chips">
+          <div class="chip" data-val="pusing" onclick="toggleChip(this)">🌀 Pusing</div>
+          <div class="chip" data-val="lemas" onclick="toggleChip(this)">😴 Lemas</div>
+          <div class="chip" data-val="lelah" onclick="toggleChip(this)">😓 Mudah Lelah</div>
+          <div class="chip" data-val="pucat" onclick="toggleChip(this)">😶 Kulit Pucat</div>
+          <div class="chip" data-val="jantung" onclick="toggleChip(this)">💓 Jantung Berdebar</div>
+          <div class="chip" data-val="sesak" onclick="toggleChip(this)">😮‍💨 Sesak Nafas</div>
+          <div class="chip" data-val="sulit-konsentrasi" onclick="toggleChip(this)">🧠 Sulit Konsentrasi</div>
+          <div class="chip" data-val="sakit-kepala" onclick="toggleChip(this)">🤕 Sakit Kepala</div>
+          <div class="chip" data-val="kuku-rapuh" onclick="toggleChip(this)">💅 Kuku Rapuh</div>
+          <div class="chip" data-val="lidah-pucat" onclick="toggleChip(this)">👅 Lidah Pucat</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Tanyakan ke Diri Sendiri</div>
+        <div class="app-field">
+          <label>Apakah kamu tidur cukup semalam?</label>
+          <select id="q-sleep">
+            <option value="">Pilih jawaban</option>
+            <option value="ya">Ya, tidur cukup (>7 jam)</option>
+            <option value="kurang">Kurang (5–7 jam)</option>
+            <option value="sangat-kurang">Sangat kurang (&lt;5 jam)</option>
+          </select>
+        </div>
+        <div class="app-field">
+          <label>Apakah kamu makan dengan teratur hari ini?</label>
+          <select id="q-meal">
+            <option value="">Pilih jawaban</option>
+            <option value="ya">Ya, 3 kali sehari</option>
+            <option value="kurang">Hanya 1–2 kali</option>
+            <option value="skip">Belum makan sama sekali</option>
+          </select>
+        </div>
+        <div class="app-field">
+          <label>Intensitas gejala (1 = ringan, 5 = berat)</label>
+          <input type="range" id="q-intensity" min="1" max="5" value="2" style="width:100%;accent-color:var(--red)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);">
+            <span>Ringan</span><span>Berat</span>
+          </div>
+        </div>
+        <div class="app-field">
+          <label>Catatan tambahan (opsional)</label>
+          <textarea id="q-notes" placeholder="Tulis gejala lain atau kondisi khusus..."></textarea>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="analyzeSymptom()">🔍 Analisis Risiko Sekarang</button>
+
+      <div id="result-card" class="card" style="display:none;margin-top:16px;">
+        <div class="card-title" style="text-align:center;margin-bottom:16px;">Hasil Analisis</div>
+        <div id="result-ring-wrap"></div>
+        <hr class="divider">
+        <div class="section-title">Rekomendasi untuk Kamu</div>
+        <div id="result-recommendations"></div>
+      </div>
+    </div>
+
+    <!-- ── POLA MAKAN ── -->
+    <div id="page-food" class="page">
+      <div class="section-title" style="font-size:20px;">🥗 Tracker Pola Makan</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Catat makanan kaya zat besi yang kamu konsumsi hari ini</p>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Kebutuhan Zat Besi Harian</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:13px;color:var(--muted);">Terpenuhi</span>
+          <span style="font-size:14px;font-weight:700;color:var(--red);" id="iron-count">0 / 15 mg</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="iron-bar" style="width:0%;background:linear-gradient(90deg,var(--red),var(--red-light))"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">Remaja putri membutuhkan 15–18 mg zat besi per hari (WHO)</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Tambah Konsumsi</div>
+        <div class="app-field">
+          <label>Pilih Makanan</label>
+          <select id="food-select">
+            <option value="">Pilih makanan...</option>
+            <option value="hati-ayam|6.2">Hati Ayam (100g) – 6.2 mg Fe</option>
+            <option value="daging-sapi|3.5">Daging Sapi (100g) – 3.5 mg Fe</option>
+            <option value="bayam|3.6">Bayam Rebus (100g) – 3.6 mg Fe</option>
+            <option value="tempe|2.7">Tempe (100g) – 2.7 mg Fe</option>
+            <option value="tahu|1.8">Tahu (100g) – 1.8 mg Fe</option>
+            <option value="kacang-merah|5.1">Kacang Merah (100g) – 5.1 mg Fe</option>
+            <option value="ikan-sardines|2.9">Ikan Sardines (100g) – 2.9 mg Fe</option>
+            <option value="telur|1.2">Telur Ayam (1 butir) – 1.2 mg Fe</option>
+            <option value="brokoli|1.0">Brokoli (100g) – 1.0 mg Fe</option>
+            <option value="jeruk|0.3">Jeruk (1 buah, vitamin C) – +absorpsi</option>
+          </select>
+        </div>
+        <div class="app-field">
+          <label>Waktu Makan</label>
+          <select id="meal-time">
+            <option value="Sarapan">🌅 Sarapan</option>
+            <option value="Makan Siang">☀️ Makan Siang</option>
+            <option value="Makan Malam">🌙 Makan Malam</option>
+            <option value="Camilan">🍎 Camilan</option>
+          </select>
+        </div>
+        <button class="btn-sm" onclick="addFood()">+ Tambah</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Log Makan Hari Ini</div>
+        <div id="food-log">
+          <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada catatan makan hari ini</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">🏆 Makanan Tinggi Zat Besi</div>
+        <div class="food-item">
+          <div class="food-icon">🫀</div>
+          <div class="food-info">
+            <div class="food-name">Hati Ayam</div>
+            <div class="food-iron">6.2 mg per 100g</div>
+            <div class="food-bar"><div class="progress-bar"><div class="progress-fill" style="width:83%;background:linear-gradient(90deg,#C0392B,#E8534A)"></div></div></div>
+          </div>
+          <div class="food-pct">83%</div>
+        </div>
+        <div class="food-item">
+          <div class="food-icon">🫘</div>
+          <div class="food-info">
+            <div class="food-name">Kacang Merah</div>
+            <div class="food-iron">5.1 mg per 100g</div>
+            <div class="food-bar"><div class="progress-bar"><div class="progress-fill" style="width:68%;background:linear-gradient(90deg,#C0392B,#E8534A)"></div></div></div>
+          </div>
+          <div class="food-pct">68%</div>
+        </div>
+        <div class="food-item">
+          <div class="food-icon">🥩</div>
+          <div class="food-info">
+            <div class="food-name">Daging Sapi</div>
+            <div class="food-iron">3.5 mg per 100g</div>
+            <div class="food-bar"><div class="progress-bar"><div class="progress-fill" style="width:47%;background:linear-gradient(90deg,#C0392B,#E8534A)"></div></div></div>
+          </div>
+          <div class="food-pct">47%</div>
+        </div>
+        <div class="food-item">
+          <div class="food-icon">🥬</div>
+          <div class="food-info">
+            <div class="food-name">Bayam Rebus</div>
+            <div class="food-iron">3.6 mg per 100g</div>
+            <div class="food-bar"><div class="progress-bar"><div class="progress-fill" style="width:48%;background:linear-gradient(90deg,#C0392B,#E8534A)"></div></div></div>
+          </div>
+          <div class="food-pct">48%</div>
+        </div>
+        <div style="margin-top:10px;" class="alert alert-warning">
+          <span>💡</span><span>Konsumsi vitamin C (jeruk, tomat) bersamaan dengan makanan kaya zat besi untuk meningkatkan penyerapan hingga 3x lipat!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SIKLUS HAID ── -->
+    <div id="page-period" class="page">
+      <div class="section-title" style="font-size:20px;">📅 Tracker Siklus Haid</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Pantau siklus menstruasimu untuk memahami risiko anemia dengan lebih baik</p>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" id="cal-month-label">Maret 2026</span>
+          <div style="display:flex;gap:8px;">
+            <button onclick="changeMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:18px;">‹</button>
+            <button onclick="changeMonth(1)" style="background:none;border:none;cursor:pointer;font-size:18px;">›</button>
+          </div>
+        </div>
+        <div class="cal-header">
+          <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span>
+        </div>
+        <div class="period-calendar" id="period-cal"></div>
+        <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><div style="width:12px;height:12px;background:#FDECEA;border-radius:3px;border:1px solid var(--red)"></div>Menstruasi</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><div style="width:12px;height:12px;background:#E8F8EF;border-radius:3px;border:1px solid var(--success)"></div>Subur</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><div style="width:12px;height:12px;background:var(--red);border-radius:50%"></div>Hari ini</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Input Data Siklus</div>
+        <div class="app-field">
+          <label>Tanggal Mulai Haid Terakhir</label>
+          <input type="date" id="period-start" value="2026-03-05">
+        </div>
+        <div class="app-field">
+          <label>Durasi Haid (hari)</label>
+          <select id="period-dur">
+            <option>3</option><option>4</option><option selected>5</option>
+            <option>6</option><option>7</option><option>8</option>
+          </select>
+        </div>
+        <div class="app-field">
+          <label>Panjang Siklus (hari)</label>
+          <select id="period-cycle">
+            <option>21</option><option>24</option><option>26</option>
+            <option selected>28</option><option>30</option><option>32</option><option>35</option>
+          </select>
+        </div>
+        <div class="app-field">
+          <label>Volume Darah</label>
+          <select id="period-flow">
+            <option value="ringan">Ringan (sedikit)</option>
+            <option value="sedang" selected>Sedang (normal)</option>
+            <option value="berat">Berat (banyak)</option>
+            <option value="sangat-berat">Sangat Berat (mengganggu)</option>
+          </select>
+        </div>
+        <div class="app-field">
+          <label>Keluhan Saat Haid</label>
+          <div class="chip-wrap" style="margin-top:4px;">
+            <div class="chip" data-val="nyeri" onclick="toggleChip(this)">😣 Nyeri</div>
+            <div class="chip" data-val="mual" onclick="toggleChip(this)">🤢 Mual</div>
+            <div class="chip" data-val="sakit-punggung" onclick="toggleChip(this)">🦴 Sakit Punggung</div>
+            <div class="chip" data-val="mood-swing" onclick="toggleChip(this)">😤 Mood Swing</div>
+          </div>
+        </div>
+        <button class="btn-sm" onclick="savePeriod()" style="margin-top:8px;">💾 Simpan Data</button>
+      </div>
+
+      <div class="card" id="period-prediction">
+        <div class="card-title" style="margin-bottom:12px;">🔮 Prediksi Siklus</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="period-pred-content">
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Haid Berikutnya</div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--red);margin-top:4px;" id="next-period">2 Apr</div>
+          </div>
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Masa Subur</div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--success);margin-top:4px;" id="fertile-window">19–23 Mar</div>
+          </div>
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Panjang Siklus</div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--dark);margin-top:4px;">28 hari</div>
+          </div>
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Status Siklus</div>
+            <div style="font-family:'Playfair Display',serif;font-size:14px;color:var(--success);margin-top:4px;">Normal ✓</div>
+          </div>
+        </div>
+        <div class="alert alert-danger" style="margin-top:12px;">
+          <span>🩸</span><span>Volume haid yang berat meningkatkan risiko anemia defisiensi besi. Konsultasikan dengan dokter jika berlangsung lebih dari 7 hari.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EDUKASI ── -->
+    <div id="page-edu" class="page">
+      <div class="section-title" style="font-size:20px;">📚 Pusat Edukasi</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Tingkatkan literasi gizi dan kesehatan kamu</p>
+
+      <div class="card" style="background:linear-gradient(135deg,#2980B9,#3498DB);color:#fff;cursor:pointer;" onclick="showQuiz()">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:36px;">🎮</div>
+          <div>
+            <div style="font-weight:700;font-size:15px;">Kuis Gizi Hari Ini</div>
+            <div style="font-size:12px;opacity:.85;margin-top:2px;">Jawab 5 soal & kumpulkan +50 XP!</div>
+          </div>
+          <div style="margin-left:auto;font-size:20px;">→</div>
+        </div>
+      </div>
+
+      <div class="edu-card" onclick="openArticle(0)">
+        <div class="edu-thumb" style="background:linear-gradient(135deg,#FDECEA,#FAC5C0);">🩺</div>
+        <div class="edu-body">
+          <div class="edu-tag">ANEMIA</div>
+          <div class="edu-title">Mengenal Anemia Defisiensi Besi pada Remaja</div>
+          <div class="edu-desc">Pahami penyebab, gejala, dan cara pencegahan anemia yang paling umum terjadi...</div>
+        </div>
+      </div>
+
+      <div class="edu-card" onclick="openArticle(1)">
+        <div class="edu-thumb" style="background:linear-gradient(135deg,#E8F8EF,#D0F0E0);">🥦</div>
+        <div class="edu-body">
+          <div class="edu-tag">GIZI</div>
+          <div class="edu-title">10 Makanan Super Kaya Zat Besi untuk Remaja Putri</div>
+          <div class="edu-desc">Dari hati ayam hingga bayam – sumber zat besi terbaik yang mudah ditemukan di Indonesia...</div>
+        </div>
+      </div>
+
+      <div class="edu-card" onclick="openArticle(2)">
+        <div class="edu-thumb" style="background:linear-gradient(135deg,#FEF3E2,#FAE0A0);">💊</div>
+        <div class="edu-body">
+          <div class="edu-tag">PENCEGAHAN</div>
+          <div class="edu-title">Panduan Lengkap Konsumsi Tablet Tambah Darah (TTD)</div>
+          <div class="edu-desc">Kapan, bagaimana, dan mengapa TTD penting dikonsumsi setiap minggu oleh remaja putri...</div>
+        </div>
+      </div>
+
+      <div class="edu-card" onclick="openArticle(3)">
+        <div class="edu-thumb" style="background:linear-gradient(135deg,#E8EAF6,#C5CAE9);">🧠</div>
+        <div class="edu-body">
+          <div class="edu-tag">DAMPAK</div>
+          <div class="edu-title">Anemia dan Penurunan Prestasi Belajar: Ada Hubungannya?</div>
+          <div class="edu-desc">Penelitian menunjukkan anemia mempengaruhi konsentrasi dan nilai akademik secara signifikan...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFIL ── -->
+    <div id="page-profile" class="page">
+      <div class="card" style="text-align:center;padding-bottom:28px;">
+        <div class="profile-avatar" id="prof-avatar">👧</div>
+        <div class="profile-name" id="prof-name">–</div>
+        <div class="profile-email" id="prof-email">–</div>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:var(--cream);padding:8px 16px;border-radius:20px;margin-top:4px;">
+          <span style="font-size:13px;font-weight:600;color:var(--red);">⭐ Level 3</span>
+          <span style="font-size:12px;color:var(--muted);">Iron Guardian</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px;">🏅 Lencana Kamu</div>
+        <div class="badge-grid">
+          <div class="badge-item"><div class="b-icon">🔰</div><div class="b-name">Pemula</div></div>
+          <div class="badge-item"><div class="b-icon">📅</div><div class="b-name">7 Hari Aktif</div></div>
+          <div class="badge-item"><div class="b-icon">🥗</div><div class="b-name">Pola Makan Sehat</div></div>
+          <div class="badge-item"><div class="b-icon locked">🏆</div><div class="b-name">30 Hari Aktif</div></div>
+          <div class="badge-item"><div class="b-icon locked">💎</div><div class="b-name">Zero Anemia</div></div>
+          <div class="badge-item"><div class="b-icon locked">🌟</div><div class="b-name">Iron Queen</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">📊 Statistik Kamu</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--red);">12</div>
+            <div style="font-size:11px;color:var(--muted);">Hari aktif</div>
+          </div>
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--success);">8</div>
+            <div style="font-size:11px;color:var(--muted);">TTD dikonsumsi</div>
+          </div>
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--info);">650</div>
+            <div style="font-size:11px;color:var(--muted);">Total XP</div>
+          </div>
+          <div style="background:var(--cream);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--warning);">3</div>
+            <div style="font-size:11px;color:var(--muted);">Kuis diselesaikan</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">📝 Perbarui Data Fisik</div>
+        <div class="app-field">
+          <label>Berat Badan (kg)</label>
+          <input type="number" id="upd-weight" placeholder="Masukkan berat badan">
+        </div>
+        <div class="app-field">
+          <label>Tinggi Badan (cm)</label>
+          <input type="number" id="upd-height" placeholder="Masukkan tinggi badan">
+        </div>
+        <button class="btn-sm" onclick="updatePhysical()">Perbarui Data</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">⚙️ Pengaturan</div>
+        <div class="setting-row" onclick="toggleNotif()">
+          <div class="setting-label">🔔 Notifikasi Pengingat TTD</div>
+          <div class="toggle on" id="toggle-notif"></div>
+        </div>
+        <div class="setting-row" onclick="toggleDarkMode()">
+          <div class="setting-label">🌙 Mode Gelap</div>
+          <div class="toggle" id="toggle-dark"></div>
+        </div>
+        <div class="setting-row" onclick="document.getElementById('toggle-uks').classList.toggle('on')">
+          <div class="setting-label">📊 Bagikan Data ke Sekolah (UKS)</div>
+          <div class="toggle" id="toggle-uks"></div>
+        </div>
+        <div class="setting-row" onclick="doLogout()">
+          <div class="setting-label" style="color:var(--red);">🚪 Keluar</div>
+          <div class="setting-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content-area -->
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="navTo('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Beranda</span>
+    </div>
+    <div class="nav-item" id="nav-symptom" onclick="navTo('symptom')">
+      <span class="nav-icon">🤒</span>
+      <span class="nav-label">Gejala</span>
+    </div>
+    <div class="nav-item" id="nav-food" onclick="navTo('food')">
+      <span class="nav-icon">🥗</span>
+      <span class="nav-label">Makanan</span>
+    </div>
+    <div class="nav-item" id="nav-period" onclick="navTo('period')">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Siklus</span>
+    </div>
+    <div class="nav-item" id="nav-edu" onclick="navTo('edu')">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Edukasi</span>
+    </div>
+  </nav>
+</div><!-- end screen-app -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Quiz Modal -->
+<div id="quiz-modal" class="modal-overlay">
+  <div style="background:#fff;border-radius:20px;padding:28px;max-width:380px;width:100%;animation:slideUp .3s both;">
+    <div style="text-align:right;"><span onclick="closeQuiz()" style="cursor:pointer;font-size:20px;color:var(--muted);">✕</span></div>
+    <div id="quiz-content"></div>
+  </div>
+</div>
+
+<!-- Article Modal -->
+<div id="article-modal" class="modal-overlay" style="overflow-y:auto;align-items:flex-start;padding-top:20px;">
+  <div style="background:#fff;border-radius:20px;max-width:420px;width:100%;margin:0 auto;overflow:hidden;animation:slideUp .3s both;">
+    <div id="article-content"></div>
+    <div style="padding:20px;">
+      <button class="btn-primary" onclick="closeArticle()">✕ Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+//  DATA & STATE
+// ══════════════════════════════
+let currentUser = null;
+let users = JSON.parse(localStorage.getItem('it_users') || '{}');
+let ironTotal = 0;
+let foodLog = [];
+let calYear = 2026, calMonth = 2; // March 2026 (0-indexed)
+let periodDays = new Set([1,2,3,4,5,6,7]);
+let quizIndex = 0;
+let quizScore = 0;
+
+const quizQuestions = [
+  { q:"Berapa kebutuhan zat besi harian remaja putri?", opts:["8 mg","12 mg","15 mg","20 mg"], ans:2 },
+  { q:"Vitamin apa yang membantu penyerapan zat besi?", opts:["Vitamin A","Vitamin B","Vitamin C","Vitamin D"], ans:2 },
+  { q:"Prevalensi anemia pada remaja putri Indonesia (SKI 2023)?", opts:["10%","15%","18%","25%"], ans:2 },
+  { q:"Gejala utama anemia defisiensi besi adalah?", opts:["Demam tinggi","Lemas dan pucat","Batuk kronis","Nyeri sendi"], ans:1 },
+  { q:"TTD (Tablet Tambah Darah) sebaiknya dikonsumsi?", opts:["Setiap hari","Seminggu sekali","Sebulan sekali","Saat haid saja"], ans:1 },
+];
+
+const articles = [
+  {
+    emoji:"🩺", tag:"ANEMIA", title:"Mengenal Anemia Defisiensi Besi pada Remaja",
+    content:`<p>Anemia defisiensi besi adalah kondisi ketika tubuh kekurangan zat besi yang dibutuhkan untuk memproduksi hemoglobin – protein dalam sel darah merah yang membawa oksigen ke seluruh tubuh.</p>
+    <br><p><b>Penyebab Utama:</b></p>
+    <ul style="margin:8px 0 8px 20px;font-size:14px;line-height:1.8;">
+      <li>Asupan zat besi yang tidak mencukupi</li>
+      <li>Kehilangan darah saat menstruasi</li>
+      <li>Penyerapan zat besi yang rendah</li>
+      <li>Pertumbuhan yang cepat di masa remaja</li>
+    </ul>
+    <br><p><b>Gejala yang Perlu Diwaspadai:</b></p>
+    <ul style="margin:8px 0 8px 20px;font-size:14px;line-height:1.8;">
+      <li>Lemas dan mudah lelah</li>
+      <li>Kulit pucat</li>
+      <li>Sulit berkonsentrasi</li>
+      <li>Jantung berdebar</li>
+      <li>Sesak napas saat aktivitas ringan</li>
+    </ul>
+    <br><p style="background:#FDECEA;padding:12px;border-radius:10px;font-size:13px;">⚠️ Jika mengalami 3 atau lebih gejala di atas, segera konsultasikan dengan tenaga kesehatan di puskesmas atau klinik terdekat.</p>`
+  },
+  {
+    emoji:"🥦", tag:"GIZI", title:"10 Makanan Super Kaya Zat Besi untuk Remaja Putri",
+    content:`<p>Zat besi hadir dalam dua bentuk: heme (dari produk hewani, lebih mudah diserap) dan non-heme (dari tumbuhan).</p>
+    <br><div style="display:grid;gap:10px;">
+    ${[["🫀","Hati Ayam","6.2 mg/100g"],["🫘","Kacang Merah","5.1 mg/100g"],["🥬","Bayam","3.6 mg/100g"],["🥩","Daging Sapi","3.5 mg/100g"],["🐟","Ikan Sarden","2.9 mg/100g"],["🌱","Tempe","2.7 mg/100g"],["🥚","Telur","1.2 mg/butir"]].map(([e,n,m])=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--cream);border-radius:10px;">
+        <span style="font-size:24px">${e}</span>
+        <div><div style="font-weight:600;font-size:13px">${n}</div><div style="font-size:12px;color:var(--red)">${m} zat besi</div></div>
+      </div>`).join('')}
+    </div>
+    <br><p style="background:#E8F8EF;padding:12px;border-radius:10px;font-size:13px;">✅ Tips: Makan makanan kaya zat besi bersamaan dengan sumber vitamin C seperti jeruk atau tomat untuk meningkatkan penyerapan hingga 3x!</p>`
+  },
+  {
+    emoji:"💊", tag:"PENCEGAHAN", title:"Panduan Lengkap Konsumsi Tablet Tambah Darah (TTD)",
+    content:`<p>Tablet Tambah Darah (TTD) adalah suplemen zat besi yang diberikan pemerintah untuk mencegah anemia pada remaja putri.</p>
+    <br><p><b>🗓️ Jadwal Konsumsi:</b></p>
+    <p style="margin:8px 0;font-size:14px;line-height:1.6;">Satu tablet per minggu selama masa remaja. Dianjurkan dikonsumsi setiap hari di bulan yang sama agar mudah diingat.</p>
+    <br><p><b>✅ Tips Konsumsi yang Benar:</b></p>
+    <ul style="margin:8px 0 8px 20px;font-size:14px;line-height:1.8;">
+      <li>Minum bersama air putih atau jus jeruk</li>
+      <li>Jangan minum bersama teh, kopi, atau susu</li>
+      <li>Konsumsi setelah makan untuk mengurangi mual</li>
+      <li>Simpan di tempat sejuk dan kering</li>
+    </ul>
+    <br><p style="background:#FEF3E2;padding:12px;border-radius:10px;font-size:13px;">💡 Hanya 0.9% dari 76.2% remaja putri penerima TTD yang mengonsumsinya secara rutin. Jadilah bagian dari perubahan!</p>`
+  },
+  {
+    emoji:"🧠", tag:"DAMPAK", title:"Anemia dan Penurunan Prestasi Belajar",
+    content:`<p>Penelitian menunjukkan hubungan yang signifikan antara anemia dan performa akademik remaja putri.</p>
+    <br><p><b>Dampak Anemia pada Otak:</b></p>
+    <ul style="margin:8px 0 8px 20px;font-size:14px;line-height:1.8;">
+      <li>Penurunan kemampuan konsentrasi</li>
+      <li>Daya ingat yang melemah</li>
+      <li>Kelelahan mental lebih cepat</li>
+      <li>Motivasi belajar yang berkurang</li>
+      <li>Nilai akademik yang menurun</li>
+    </ul>
+    <br><p><b>Fakta Mengejutkan:</b></p>
+    <p style="margin:8px 0;font-size:14px;line-height:1.6;">Remaja dengan anemia memiliki risiko 1.5x lebih tinggi untuk mengalami penurunan nilai dibanding yang tidak anemia. Pasokan oksigen ke otak yang tidak optimal adalah penyebab utamanya.</p>
+    <br><p style="background:#E8EAF6;padding:12px;border-radius:10px;font-size:13px;">📚 Dengan mengatasi anemia, kamu tidak hanya menjaga kesehatan – tapi juga membuka potensi belajar terbaik kamu!</p>`
+  }
+];
+
+// ══════════════════════════════
+//  SCREEN MANAGEMENT
+// ══════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════
+//  REGISTER — HITUNG USIA
+// ══════════════════════════════
+function hitungUsiaReg() {
+  const input = document.getElementById('reg-dob').value;
+  if (!input) return;
+  const lahir = new Date(input);
+  const hariIni = new Date();
+  let usia = hariIni.getFullYear() - lahir.getFullYear();
+  const bulan = hariIni.getMonth() - lahir.getMonth();
+  if (bulan < 0 || (bulan === 0 && hariIni.getDate() < lahir.getDate())) usia--;
+  document.getElementById('reg-age-display').textContent = 'Usia: ' + usia + ' tahun';
+}
+
+// ══════════════════════════════
+//  AUTH
+// ══════════════════════════════
+function doRegister() {
+  const name   = document.getElementById('reg-name').value.trim();
+  const email  = document.getElementById('reg-email').value.trim();
+  const pass   = document.getElementById('reg-pass').value;
+  const dob    = document.getElementById('reg-dob').value;
+  const edu    = document.getElementById('reg-edu').value;
+  const weight = document.getElementById('reg-weight').value;
+  const height = document.getElementById('reg-height').value;
+
+  // Validasi wajib
+  if (!name)   { showToast('⚠️ Nama lengkap harus diisi'); return; }
+  if (!email)  { showToast('⚠️ Email harus diisi'); return; }
+  if (!pass)   { showToast('⚠️ Kata sandi harus diisi'); return; }
+  if (pass.length < 6) { showToast('⚠️ Kata sandi min. 6 karakter'); return; }
+  if (!dob)    { showToast('⚠️ Tanggal lahir harus diisi'); return; }
+  if (users[email]) { showToast('⚠️ Email sudah terdaftar'); return; }
+
+  // Hitung usia dari dob
+  const lahir = new Date(dob);
+  const hariIni = new Date();
+  let age = hariIni.getFullYear() - lahir.getFullYear();
+  const bln = hariIni.getMonth() - lahir.getMonth();
+  if (bln < 0 || (bln === 0 && hariIni.getDate() < lahir.getDate())) age--;
+
+  users[email] = { name, email, pass, age, dob, edu, weight: weight || '–', height: height || '–' };
+  localStorage.setItem('it_users', JSON.stringify(users));
+
+  showToast('✅ Akun berhasil dibuat! Silakan masuk.');
+  setTimeout(() => showScreen('login'), 1400);
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if (!email || !pass) { showToast('⚠️ Isi email dan kata sandi'); return; }
+  const user = users[email];
+  if (!user || user.pass !== pass) { showToast('❌ Email atau kata sandi salah'); return; }
+  currentUser = user;
+  initApp();
+  showScreen('app');
+}
+
+function doLogout() {
+  currentUser = null;
+  showToast('👋 Sampai jumpa!');
+  setTimeout(() => showScreen('landing'), 800);
+}
+
+// ══════════════════════════════
+//  APP INIT
+// ══════════════════════════════
+function initApp() {
+  const u = currentUser;
+  document.getElementById('topbar-name').textContent = 'Halo, ' + u.name.split(' ')[0];
+  document.getElementById('prof-name').textContent = u.name;
+  document.getElementById('prof-email').textContent = u.email;
+  document.getElementById('prof-avatar').textContent = '👧';
+
+  // Greeting
+  const h = new Date().getHours();
+  const sapa = h < 11 ? 'Selamat Pagi! 🌅' : h < 15 ? 'Selamat Siang! ☀️' : 'Selamat Sore! 🌙';
+  document.getElementById('greeting-text').textContent = sapa + ' ' + u.name.split(' ')[0];
+
+  // IMT
+  const w = parseFloat(u.weight), ht = parseFloat(u.height);
+  if (!isNaN(w) && !isNaN(ht) && w > 0 && ht > 0) {
+    const hm = ht / 100;
+    const imt = (w / (hm * hm)).toFixed(1);
+    document.getElementById('home-weight').textContent = w;
+    document.getElementById('home-height').textContent = ht;
+    document.getElementById('home-imt').textContent = imt;
+    const cat = imt < 18.5 ? 'Kurus' : imt < 25 ? 'Normal' : imt < 30 ? 'Gemuk' : 'Obesitas';
+    document.getElementById('home-imt-cat').textContent = cat;
+    document.getElementById('upd-weight').value = w;
+    document.getElementById('upd-height').value = ht;
+  }
+
+  renderCalendar();
+}
+
+// ══════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const ni = document.getElementById('nav-' + page);
+  if (ni) ni.classList.add('active');
+}
+
+// ══════════════════════════════
+//  SYMPTOM ANALYSIS
+// ══════════════════════════════
+function toggleChip(el) { el.classList.toggle('active'); }
+
+function analyzeSymptom() {
+  const chips = document.querySelectorAll('#symptom-chips .chip.active');
+  const count = chips.length;
+  const intensity = parseInt(document.getElementById('q-intensity').value);
+  const sleep = document.getElementById('q-sleep').value;
+  const meal  = document.getElementById('q-meal').value;
+
+  let score = 20;
+  score += count * 8;
+  score += (intensity - 1) * 4;
+  if (sleep === 'kurang') score += 5;
+  if (sleep === 'sangat-kurang') score += 10;
+  if (meal === 'kurang') score += 5;
+  if (meal === 'skip') score += 15;
+  score = Math.min(score, 100);
+
+  // Update gauge
+  const offset = 283 - (score / 100) * 283;
+  const arc = document.getElementById('gauge-arc');
+  const color = score >= 70 ? '#C0392B' : score >= 40 ? '#F39C12' : '#27AE60';
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke = color;
+  document.getElementById('risk-score').textContent = score;
+
+  const level = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
+  const badge = document.getElementById('home-risk-badge');
+  if (level === 'high')   { badge.className = 'badge badge-danger';  badge.textContent = 'Tinggi'; }
+  else if (level === 'medium') { badge.className = 'badge badge-warning'; badge.textContent = 'Sedang'; }
+  else { badge.className = 'badge badge-success'; badge.textContent = 'Rendah'; }
+
+  const recs = {
+    high:   ['Segera konsultasikan dengan dokter atau puskesmas terdekat','Tingkatkan konsumsi makanan kaya zat besi (hati, daging merah, bayam)','Minum TTD sesuai anjuran setiap minggu','Istirahat cukup minimal 8 jam per malam','Hindari konsumsi teh/kopi saat makan'],
+    medium: ['Perbanyak konsumsi makanan sumber zat besi','Konsumsi TTD setiap minggu secara rutin','Kombinasikan dengan vitamin C untuk penyerapan optimal','Monitor gejala secara berkala lewat IronTrack','Olahraga ringan 30 menit setiap hari'],
+    low:    ['Pertahankan pola makan sehat yang seimbang','Tetap minum TTD setiap minggu sebagai pencegahan','Lanjutkan monitoring gejala secara rutin','Bagikan informasi ini kepada teman-temanmu!']
+  };
+  const emoji = { high:'😟', medium:'😐', low:'😊' };
+  const label = { high:'Risiko Tinggi', medium:'Risiko Sedang', low:'Risiko Rendah' };
+
+  const rc = document.getElementById('result-card');
+  document.getElementById('result-ring-wrap').innerHTML = `
+    <div class="result-ring ${level}">
+      <div class="r-emoji">${emoji[level]}</div>
+      <div class="r-label">${label[level]}</div>
+    </div>
+    <div style="text-align:center;font-family:'Playfair Display',serif;font-size:28px;color:var(--dark);margin-bottom:4px;">${score}</div>
+    <div style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:12px;">Skor Risiko Anemia</div>`;
+  document.getElementById('result-recommendations').innerHTML = recs[level].map(r => `
+    <div class="recommend-item"><div class="rec-dot"></div><div class="rec-text">${r}</div></div>`).join('');
+  rc.style.display = 'block';
+  rc.scrollIntoView({ behavior: 'smooth' });
+  showToast('✅ Analisis selesai! Skor: ' + score);
+}
+
+// ══════════════════════════════
+//  FOOD TRACKER
+// ══════════════════════════════
+function addFood() {
+  const sel  = document.getElementById('food-select').value;
+  const time = document.getElementById('meal-time').value;
+  if (!sel) { showToast('⚠️ Pilih makanan terlebih dahulu'); return; }
+  const [name, iron] = sel.split('|');
+  const mg = parseFloat(iron);
+  foodLog.push({ name: name.replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase()), iron: mg, time });
+  ironTotal = Math.min(ironTotal + mg, 15);
+  updateFoodUI();
+  showToast('✅ +' + mg + ' mg zat besi ditambahkan!');
+  document.getElementById('food-select').value = '';
+}
+
+function updateFoodUI() {
+  const pct = Math.min((ironTotal / 15) * 100, 100).toFixed(0);
+  document.getElementById('iron-count').textContent = ironTotal.toFixed(1) + ' / 15 mg';
+  document.getElementById('iron-bar').style.width = pct + '%';
+  const icons = {'Hati Ayam':'🫀','Daging Sapi':'🥩','Bayam Rebus':'🥬','Tempe':'🌱','Tahu':'🧆','Kacang Merah':'🫘','Ikan Sardines':'🐟','Telur Ayam':'🥚','Brokoli':'🥦','Jeruk':'🍊'};
+  document.getElementById('food-log').innerHTML = foodLog.length
+    ? foodLog.map((f, i) => `
+        <div class="food-item">
+          <div class="food-icon">${icons[f.name] || '🍽️'}</div>
+          <div class="food-info">
+            <div class="food-name">${f.name}</div>
+            <div class="food-iron">${f.time} · +${f.iron} mg zat besi</div>
+          </div>
+          <button onclick="removeFood(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;">×</button>
+        </div>`).join('')
+    : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada catatan makan hari ini</div>';
+}
+
+function removeFood(i) {
+  ironTotal = Math.max(0, ironTotal - foodLog[i].iron);
+  foodLog.splice(i, 1);
+  updateFoodUI();
+}
+
+// ══════════════════════════════
+//  TTD
+// ══════════════════════════════
+function markTTD() { showToast('💊 TTD hari ini sudah dicatat! +20 XP'); }
+
+// ══════════════════════════════
+//  PERIOD CALENDAR
+// ══════════════════════════════
+function renderCalendar() {
+  const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  document.getElementById('cal-month-label').textContent = months[calMonth] + ' ' + calYear;
+  const firstDay    = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const today       = new Date();
+  const isCurrentMonth = today.getFullYear() === calYear && today.getMonth() === calMonth;
+  const todayDate   = today.getDate();
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day other"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    let cls = 'cal-day';
+    if (isCurrentMonth && d === todayDate) cls += ' today';
+    else if (periodDays.has(d)) cls += ' period';
+    else if (d >= 19 && d <= 23) cls += ' fertile';
+    html += `<div class="${cls}" onclick="togglePeriodDay(${d})">${d}</div>`;
+  }
+  document.getElementById('period-cal').innerHTML = html;
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function togglePeriodDay(d) {
+  if (periodDays.has(d)) periodDays.delete(d);
+  else periodDays.add(d);
+  renderCalendar();
+}
+
+function savePeriod() {
+  const start = new Date(document.getElementById('period-start').value);
+  const cycle = parseInt(document.getElementById('period-cycle').value);
+  const next   = new Date(start); next.setDate(next.getDate() + cycle);
+  const f1     = new Date(next);  f1.setDate(f1.getDate() - 16);
+  const f2     = new Date(next);  f2.setDate(f2.getDate() - 12);
+  const mo     = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  document.getElementById('next-period').textContent    = next.getDate() + ' ' + mo[next.getMonth()];
+  document.getElementById('fertile-window').textContent = f1.getDate() + '–' + f2.getDate() + ' ' + mo[f1.getMonth()];
+  showToast('✅ Data siklus berhasil disimpan!');
+}
+
+// ══════════════════════════════
+//  EDUCATION / QUIZ
+// ══════════════════════════════
+function openArticle(i) {
+  const a = articles[i];
+  document.getElementById('article-content').innerHTML = `
+    <div style="background:linear-gradient(135deg,#FDECEA,#FAC5C0);padding:40px 20px;text-align:center;font-size:52px;">${a.emoji}</div>
+    <div style="padding:20px;">
+      <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;">${a.tag}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--dark);margin:8px 0 16px;">${a.title}</div>
+      <div style="font-size:14px;color:var(--dark);line-height:1.7;">${a.content}</div>
+    </div>`;
+  document.getElementById('article-modal').classList.add('open');
+}
+function closeArticle() {
+  document.getElementById('article-modal').classList.remove('open');
+}
+
+function showQuiz() {
+  quizIndex = 0;
+  quizScore = 0;
+  document.getElementById('quiz-modal').classList.add('open');
+  renderQuiz();
+}
+function closeQuiz() {
+  document.getElementById('quiz-modal').classList.remove('open');
+}
+
+function renderQuiz() {
+  if (quizIndex >= quizQuestions.length) {
+    document.getElementById('quiz-content').innerHTML = `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:52px;margin-bottom:12px;">${quizScore >= 4 ? '🏆' : quizScore >= 3 ? '🥈' : '👏'}</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px;">Skor: ${quizScore}/${quizQuestions.length}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">${quizScore >= 4 ? 'Luar biasa! Kamu ahli gizi!' : quizScore >= 3 ? 'Bagus! Terus belajar ya!' : 'Coba lagi untuk hasil yang lebih baik!'}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--red);">+${quizScore * 10} XP didapat!</div>
+        <button class="btn-primary" onclick="closeQuiz()" style="margin-top:16px;">Selesai</button>
+      </div>`;
+    return;
+  }
+  const q = quizQuestions[quizIndex];
+  document.getElementById('quiz-content').innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">SOAL ${quizIndex + 1} DARI ${quizQuestions.length}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:16px;margin-bottom:20px;line-height:1.4;">${q.q}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${q.opts.map((o, i) => `<button onclick="answerQuiz(${i})" style="padding:12px 16px;border:2px solid #EDE0DC;border-radius:10px;background:#fff;text-align:left;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.15s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='#EDE0DC'">${String.fromCharCode(65 + i)}. ${o}</button>`).join('')}
+    </div>`;
+}
+
+function answerQuiz(i) {
+  const q = quizQuestions[quizIndex];
+  if (i === q.ans) { quizScore++; showToast('✅ Benar! +10 XP'); }
+  else { showToast('❌ Salah. Jawaban: ' + String.fromCharCode(65 + q.ans)); }
+  quizIndex++;
+  setTimeout(renderQuiz, 900);
+}
+
+// ══════════════════════════════
+//  PROFILE
+// ══════════════════════════════
+function updatePhysical() {
+  const w = document.getElementById('upd-weight').value;
+  const h = document.getElementById('upd-height').value;
+  if (!w || !h) { showToast('⚠️ Isi berat dan tinggi badan'); return; }
+  currentUser.weight = w;
+  currentUser.height = h;
+  users[currentUser.email] = currentUser;
+  localStorage.setItem('it_users', JSON.stringify(users));
+  const hm  = parseFloat(h) / 100;
+  const imt = (parseFloat(w) / (hm * hm)).toFixed(1);
+  document.getElementById('home-weight').textContent  = w;
+  document.getElementById('home-height').textContent  = h;
+  document.getElementById('home-imt').textContent     = imt;
+  const cat = imt < 18.5 ? 'Kurus' : imt < 25 ? 'Normal' : imt < 30 ? 'Gemuk' : 'Obesitas';
+  document.getElementById('home-imt-cat').textContent = cat;
+  showToast('✅ Data fisik berhasil diperbarui!');
+}
+
+function toggleNotif() {
+  const t = document.getElementById('toggle-notif');
+  t.classList.toggle('on');
+  showToast(t.classList.contains('on') ? '🔔 Notifikasi diaktifkan' : '🔕 Notifikasi dinonaktifkan');
+}
+function toggleDarkMode() {
+  const t = document.getElementById('toggle-dark');
+  t.classList.toggle('on');
+  showToast('🌙 Mode gelap ' + (t.classList.contains('on') ? 'aktif' : 'nonaktif'));
+}
+
+// ══════════════════════════════
+//  UTILS
+// ══════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IronTrack – Deteksi Dini Risiko Anemia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--red:#C0392B;--red-deep:#8B1A1A;--red-light:#E8534A;--peach:#F7C5B5;--cream:#FDF6F0;--dark:#1A0A08;--mid:#4A2020;--muted:#9B7070;--white:#FFFFFF;--success:#27AE60;--warning:#F39C12;--info:#2980B9;--radius:16px;--shadow:0 8px 32px rgba(139,26,26,0.13);}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;}
+  .screen{display:none;min-height:100vh;}
+  .screen.active{display:flex;}
+  #screen-landing,#screen-login,#screen-register{flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,#8B1A1A 0%,#C0392B 45%,#E8534A 100%);padding:24px;position:relative;overflow:hidden;}
+  .auth-card{background:var(--white);border-radius:24px;padding:36px 32px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,0.25);position:relative;z-index:1;animation:slideUp .5s cubic-bezier(.22,.68,0,1.2) both;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+  .logo-wrap{text-align:center;margin-bottom:24px;}
+  .logo-icon{width:68px;height:68px;background:linear-gradient(135deg,#C0392B,#E8534A);border-radius:18px;display:inline-flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:10px;box-shadow:0 8px 24px rgba(192,57,43,.35);}
+  .logo-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--red-deep);}
+  .logo-sub{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.5px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11px;font-weight:700;color:var(--mid);margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase;}
+  .field input,.field select{width:100%;padding:11px 14px;border:2px solid #EDE0DC;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--dark);background:var(--cream);transition:.2s;outline:none;}
+  .field input:focus,.field select:focus{border-color:var(--red);background:var(--white);}
+  .field-hint{font-size:11px;color:var(--success);margin-top:4px;font-weight:600;min-height:16px;}
+  .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,#C0392B,#E8534A);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;margin-top:6px;font-family:'DM Sans',sans-serif;letter-spacing:.3px;}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(192,57,43,.4);}
+  .btn-secondary{width:100%;padding:12px;background:transparent;color:var(--red);border:2px solid var(--red);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;margin-top:8px;font-family:'DM Sans',sans-serif;}
+  .btn-secondary:hover{background:var(--red);color:#fff;}
+  .auth-switch{text-align:center;font-size:13px;color:var(--muted);margin-top:16px;}
+  .auth-switch a{color:var(--red);font-weight:700;cursor:pointer;}
+  .landing-hero{text-align:center;position:relative;z-index:1;margin-bottom:28px;}
+  .landing-hero h1{font-family:'Playfair Display',serif;font-size:42px;color:#fff;line-height:1.15;}
+  .landing-hero p{color:rgba(255,255,255,.8);font-size:15px;margin-top:10px;max-width:300px;margin-left:auto;margin-right:auto;}
+  .landing-stats{display:flex;gap:14px;margin-bottom:24px;}
+  .stat-bubble{flex:1;background:rgba(255,255,255,.15);border-radius:14px;padding:14px 10px;text-align:center;backdrop-filter:blur(8px);}
+  .stat-bubble .num{font-family:'Playfair Display',serif;font-size:22px;color:#fff;font-weight:900;}
+  .stat-bubble .lbl{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;}
+  .landing-card{background:var(--white);border-radius:24px;padding:26px;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 24px 64px rgba(0,0,0,.25);animation:slideUp .5s .15s both;}
+  #screen-app{flex-direction:column;background:var(--cream);}
+  .topbar{background:linear-gradient(135deg,#8B1A1A,#C0392B);padding:16px 20px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 16px rgba(139,26,26,.3);}
+  .topbar-left{display:flex;align-items:center;gap:10px;}
+  .topbar-logo{font-family:'Playfair Display',serif;font-size:20px;color:#fff;}
+  .topbar-user{font-size:12px;color:rgba(255,255,255,.7);}
+  .topbar-avatar{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;}
+  .content-area{flex:1;overflow-y:auto;padding:0 0 80px;}
+  .page{display:none;padding:20px;animation:fadeIn .3s;}
+  .page.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #EDE0DC;display:flex;padding:8px 0;box-shadow:0 -4px 20px rgba(0,0,0,.08);z-index:100;}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px;transition:.2s;}
+  .nav-item .nav-icon{font-size:22px;}
+  .nav-item .nav-label{font-size:10px;color:var(--muted);font-weight:500;}
+  .nav-item.active .nav-label{color:var(--red);}
+  .nav-item.active .nav-icon{transform:scale(1.15);}
+  .card{background:#fff;border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow);}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .card-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--dark);}
+  .badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+  .badge-danger{background:#FDECEA;color:var(--red);}
+  .badge-warning{background:#FEF3E2;color:#E67E22;}
+  .badge-success{background:#E8F8EF;color:var(--success);}
+  .progress-bar{height:8px;background:#F0E8E8;border-radius:4px;overflow:hidden;margin-top:6px;}
+  .progress-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.22,.68,0,1.2);}
+  .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+  .feature-card{background:#fff;border-radius:14px;padding:18px 14px;text-align:center;cursor:pointer;transition:.2s;box-shadow:0 4px 16px rgba(139,26,26,.07);border:2px solid transparent;}
+  .feature-card:hover{border-color:var(--red);transform:translateY(-3px);}
+  .feature-card .f-icon{font-size:28px;margin-bottom:8px;}
+  .feature-card .f-title{font-size:13px;font-weight:600;color:var(--dark);}
+  .feature-card .f-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+  .greeting-banner{background:linear-gradient(135deg,#8B1A1A,#C0392B);border-radius:20px;padding:20px;margin-bottom:16px;color:#fff;position:relative;overflow:hidden;}
+  .greeting-banner::after{content:'🩸';position:absolute;right:-10px;top:-10px;font-size:80px;opacity:.1;}
+  .greeting-banner h2{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px;}
+  .greeting-banner p{font-size:13px;opacity:.85;}
+  .app-field{margin-bottom:14px;}
+  .app-field label{font-size:11px;font-weight:700;color:var(--mid);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+  .app-field input,.app-field select,.app-field textarea{width:100%;padding:11px 14px;border:2px solid #EDE0DC;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--cream);outline:none;transition:.2s;}
+  .app-field input:focus,.app-field select:focus,.app-field textarea:focus{border-color:var(--red);background:#fff;}
+  .app-field textarea{min-height:80px;resize:vertical;}
+  .btn-sm{padding:9px 18px;background:linear-gradient(135deg,#C0392B,#E8534A);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s;}
+  .btn-sm:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(192,57,43,.35);}
+  .section-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--dark);margin-bottom:12px;}
+  .qs-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #F5EDE9;}
+  .qs-row:last-child{border-bottom:none;}
+  .qs-text{font-size:13px;color:var(--dark);line-height:1.5;flex:1;}
+  .qs-btn-wrap{display:flex;gap:6px;flex-shrink:0;}
+  .qs-btn{padding:5px 14px;border:2px solid #EDE0DC;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--mid);transition:.2s;}
+  .qs-btn.active{border-color:var(--red);background:#FDECEA;color:var(--red);}
+  .qs-btn:hover{border-color:var(--red-light);}
+  .period-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:12px 0;}
+  .cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;transition:.15s;}
+  .cal-day.period{background:#FDECEA;color:var(--red);font-weight:700;}
+  .cal-day.fertile{background:#E8F8EF;color:var(--success);}
+  .cal-day.today{background:var(--red);color:#fff;border-radius:50%;}
+  .cal-day.other{color:#ccc;}
+  .cal-day:hover:not(.today){background:#F5ECEC;}
+  .cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;}
+  .cal-header span{text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;}
+  .result-ring{width:140px;height:140px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0 auto 16px;}
+  .result-ring.high{background:linear-gradient(135deg,#FDECEA,#FAC5C0);border:4px solid var(--red);}
+  .result-ring.medium{background:linear-gradient(135deg,#FEF3E2,#FAE0A0);border:4px solid var(--warning);}
+  .result-ring.low{background:linear-gradient(135deg,#E8F8EF,#A0F0C0);border:4px solid var(--success);}
+  .result-ring .r-emoji{font-size:44px;}
+  .result-ring .r-label{font-size:11px;font-weight:700;margin-top:4px;}
+  .result-ring.high .r-label{color:var(--red);}
+  .result-ring.medium .r-label{color:var(--warning);}
+  .result-ring.low .r-label{color:var(--success);}
+  .recommend-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F5ECEC;}
+  .recommend-item:last-child{border-bottom:none;}
+  .rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);margin-top:5px;flex-shrink:0;}
+  .rec-text{font-size:13px;color:var(--dark);line-height:1.5;}
+  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:#1A0A08;color:#fff;padding:14px 28px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;z-index:999999;transition:all .4s cubic-bezier(.22,.68,0,1.2);white-space:nowrap;max-width:92vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.success{background:#155724;}
+  .toast.error{background:#721c24;}
+  .toast.warn{background:#856404;}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-thumb{background:var(--peach);border-radius:2px;}
+  .back-btn-bottom{display:flex;align-items:center;justify-content:center;gap:8px;background:none;border:2px solid #EDE0DC;border-radius:10px;cursor:pointer;color:var(--red);font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;padding:12px;margin-top:20px;width:100%;transition:.2s;}
+  .back-btn-bottom:hover{background:#FDECEA;border-color:var(--red);}
+  .reminder-day-btn{flex:1;padding:9px 4px;border:2px solid #EDE0DC;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:var(--mid);transition:.2s;text-align:center;font-family:'DM Sans',sans-serif;}
+  .reminder-day-btn.active{border-color:var(--red);background:#FDECEA;color:var(--red);}
+  .reminder-history-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F5ECEC;}
+  .reminder-history-item:last-child{border-bottom:none;}
+  .reminder-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .reminder-dot.taken{background:var(--success);}
+  .reminder-dot.missed{background:var(--red);}
+  .alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;}
+  .alert-danger{background:#FDECEA;color:#8B1A1A;border-left:4px solid var(--red);}
+  .alert-warning{background:#FEF3E2;color:#7D5100;border-left:4px solid var(--warning);}
+  .divider{border:none;border-top:1px solid #EDE0DC;margin:16px 0;}
+  .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red-light));display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 8px;}
+  .profile-name{font-family:'Playfair Display',serif;font-size:20px;text-align:center;color:var(--dark);}
+  .profile-email{font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;}
+  .setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #F5ECEC;cursor:pointer;}
+  .setting-row:last-child{border-bottom:none;}
+  .setting-label{font-size:14px;color:var(--dark);display:flex;align-items:center;gap:10px;}
+  .setting-arrow{color:var(--muted);font-size:16px;}
+  .toggle{width:44px;height:24px;background:#EDE0DC;border-radius:12px;position:relative;cursor:pointer;transition:.2s;}
+  .toggle.on{background:var(--red);}
+  .toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+  .toggle.on::after{left:23px;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:#fff;border-radius:20px;padding:28px;max-width:380px;width:100%;animation:slideUp .3s both;max-height:85vh;overflow-y:auto;}
+  /* AI Chatbot */
+  #page-ai{display:none;flex-direction:column;height:calc(100vh - 60px);padding:0;}
+  #page-ai.active{display:flex;}
+  .ai-header{background:linear-gradient(135deg,#8B1A1A,#C0392B);padding:16px 20px;color:#fff;flex-shrink:0;}
+  .ai-header-title{font-family:'Playfair Display',serif;font-size:20px;}
+  .ai-header-sub{font-size:12px;opacity:.8;margin-top:2px;}
+  .ai-status{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:11px;margin-top:6px;}
+  .ai-status-dot{width:7px;height:7px;background:#4ADE80;border-radius:50%;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .ai-result-banner{background:linear-gradient(135deg,#FEF3E2,#FAE0A0);border:2px solid #F39C12;border-radius:12px;padding:12px 14px;margin:12px 16px 0;font-size:12px;color:#7D5100;display:flex;align-items:flex-start;gap:8px;flex-shrink:0;}
+  .chat-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;padding-bottom:0;}
+  .chat-bubble{max-width:85%;padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.6;animation:fadeIn .25s;}
+  .chat-bubble.bot{background:#fff;color:var(--dark);border-bottom-left-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.06);align-self:flex-start;}
+  .chat-bubble.user{background:linear-gradient(135deg,#8B1A1A,#C0392B);color:#fff;border-bottom-right-radius:4px;align-self:flex-end;}
+  .chat-bubble.typing{background:#fff;padding:14px 18px;box-shadow:0 2px 8px rgba(0,0,0,.06);align-self:flex-start;}
+  .typing-dots{display:flex;gap:4px;align-items:center;}
+  .typing-dots span{width:7px;height:7px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite;}
+  .typing-dots span:nth-child(2){animation-delay:.2s;}
+  .typing-dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+  .chat-input-area{padding:12px 16px;background:#fff;border-top:1px solid #EDE0DC;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+  .chat-input{flex:1;padding:11px 14px;border:2px solid #EDE0DC;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--cream);outline:none;transition:.2s;resize:none;max-height:100px;min-height:44px;line-height:1.5;}
+  .chat-input:focus{border-color:var(--red);background:#fff;}
+  .chat-send-btn{width:44px;height:44px;background:linear-gradient(135deg,#C0392B,#E8534A);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;}
+  .chat-send-btn:hover{transform:scale(1.05);}
+  .chat-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .quick-questions{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;flex-shrink:0;}
+  .quick-q{padding:7px 12px;border:1.5px solid #EDE0DC;border-radius:20px;font-size:12px;cursor:pointer;transition:.2s;color:var(--mid);background:#fff;white-space:nowrap;}
+  .quick-q:hover{border-color:var(--red);color:var(--red);background:#FDECEA;}
+  .ai-back-bottom{margin:0 16px 16px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- LANDING -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-hero">
+    <div style="font-size:64px;margin-bottom:12px;">🩸</div>
+    <h1>Iron<br>Track</h1>
+    <p>Deteksi dini dan pemantauan risiko anemia untuk kesehatan yang lebih baik</p>
+  </div>
+  <div class="landing-stats">
+    <div class="stat-bubble"><div class="num">32%</div><div class="lbl">Remaja putri berisiko anemia</div></div>
+    <div class="stat-bubble"><div class="num">24/7</div><div class="lbl">Pantau kapan saja</div></div>
+  </div>
+  <div class="landing-card">
+    <button class="btn-primary" onclick="showScreen('login')">Masuk ke IronTrack</button>
+    <button class="btn-secondary" onclick="showScreen('register')">Buat Akun Baru</button>
+    <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:14px;">Versi 2.0 · Universitas Esa Unggul 2026</p>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen">
+  <div class="auth-card">
+    <div class="logo-wrap">
+      <div class="logo-icon">🩸</div>
+      <div class="logo-title">IronTrack</div>
+      <div class="logo-sub">DETEKSI DINI ANEMIA</div>
+    </div>
+    <p style="font-family:'Playfair Display',serif;font-size:20px;color:var(--dark);margin-bottom:4px;">Selamat Datang</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">Masuk untuk memantau kesehatan Anda</p>
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="contoh@email.com"></div>
+    <div class="field"><label>Kata Sandi</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="doLogin()">Masuk →</button>
+    <div class="auth-switch">Belum punya akun? <a onclick="showScreen('register')">Daftar Sekarang</a></div>
+    <div class="auth-switch" style="margin-top:8px"><a onclick="showScreen('landing')">← Kembali</a></div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="screen-register" class="screen">
+  <div class="auth-card" style="max-height:94vh;overflow-y:auto;">
+    <div class="logo-wrap">
+      <div class="logo-icon">🩸</div>
+      <div class="logo-title">IronTrack</div>
+      <div class="logo-sub">BUAT AKUN BARU</div>
+    </div>
+    <div class="field"><label>Nama Lengkap *</label><input type="text" id="r-name" placeholder="Nama lengkap kamu"></div>
+    <div class="field"><label>Email *</label><input type="email" id="r-email" placeholder="contoh@email.com"></div>
+    <div class="field"><label>Kata Sandi * (min. 6 karakter)</label><input type="password" id="r-pass" placeholder="••••••••"></div>
+    <div class="field"><label>Tanggal Lahir *</label><input type="date" id="r-dob" onchange="calcAge()"><div class="field-hint" id="r-age-hint"></div></div>
+    <div class="field"><label>Jenjang Pendidikan *</label>
+      <select id="r-edu"><option value="">-- Pilih jenjang pendidikan --</option><option value="SMP">SMP / MTs</option><option value="SMA">SMA / SMK / MA</option><option value="D3/S1">D3 / S1</option><option value="Lainnya">Lainnya</option></select>
+    </div>
+    <div class="field"><label>Berat Badan (kg) — opsional</label><input type="number" id="r-weight" placeholder="Contoh: 52" min="20" max="200"></div>
+    <div class="field"><label>Tinggi Badan (cm) — opsional</label><input type="number" id="r-height" placeholder="Contoh: 158" min="100" max="250"></div>
+    <button class="btn-primary" onclick="doRegister()">✓ Buat Akun</button>
+    <div class="auth-switch">Sudah punya akun? <a onclick="showScreen('login')">Masuk</a></div>
+    <div class="auth-switch" style="margin-top:8px"><a onclick="showScreen('landing')">← Kembali</a></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="screen-app" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div style="font-size:22px;">🩸</div>
+      <div><div class="topbar-logo">IronTrack</div><div class="topbar-user" id="topbar-name">Halo, Pengguna</div></div>
+    </div>
+    <div class="topbar-avatar" onclick="navTo('profile')">👤</div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- BERANDA -->
+    <div id="page-home" class="page active">
+      <div class="greeting-banner">
+        <h2 id="greeting-text">Selamat Pagi! 🌅</h2>
+        <p>Pantau kesehatanmu hari ini dan tetap semangat!</p>
+      </div>
+      <div class="section-title">Fitur Utama</div>
+      <div class="feature-grid">
+        <div class="feature-card" onclick="navTo('symptom')"><div class="f-icon">🤒</div><div class="f-title">Deteksi Risiko Anemia</div><div class="f-sub">Isi kuesioner untuk mengetahui risiko anemia sejak dini</div></div>
+        <div class="feature-card" onclick="navTo('period')"><div class="f-icon">📅</div><div class="f-title">Siklus Menstruasi</div><div class="f-sub">Lacak siklus menstruasi untuk mendukung analisis kesehatan</div></div>
+        <div class="feature-card" onclick="navTo('reminder')" style="border-color:var(--success);background:linear-gradient(135deg,#E8F8EF,#fff);"><div class="f-icon">💊</div><div class="f-title">Pengingat TTD</div><div class="f-sub">Atur jadwal minum tablet tambah darah mingguan</div></div>
+        <div class="feature-card" onclick="navTo('ai')" style="border-color:#2980B9;background:linear-gradient(135deg,#EBF5FB,#fff);"><div class="f-icon">🤖</div><div class="f-title">AnemiaCare AI</div><div class="f-sub">Tanya AI seputar anemia & menstruasi kapan saja</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">Status IMT Kamu</div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;text-align:center;background:var(--cream);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);">BERAT</div><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--dark);" id="home-weight">–</div><div style="font-size:11px;color:var(--muted);">kg</div></div>
+          <div style="flex:1;text-align:center;background:var(--cream);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);">TINGGI</div><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--dark);" id="home-height">–</div><div style="font-size:11px;color:var(--muted);">cm</div></div>
+          <div style="flex:1;text-align:center;background:var(--cream);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--muted);">IMT</div><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--red);" id="home-imt">–</div><div style="font-size:11px;color:var(--muted);" id="home-imt-cat">–</div></div>
+        </div>
+      </div>
+      <div class="card" id="home-last-result" style="display:none;">
+        <div class="card-header"><span class="card-title">Hasil Skrining Terakhir</span><span class="badge" id="home-risk-badge">–</span></div>
+        <div style="font-size:13px;color:var(--muted);" id="home-risk-text">–</div>
+      </div>
+    </div>
+
+    <!-- CEK GEJALA -->
+    <div id="page-symptom" class="page">
+      <div class="section-title" style="font-size:20px;">🩺 Skrining Risiko Anemia</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Jawab pertanyaan berikut dengan jujur untuk mengetahui risiko anemia kamu.</p>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:4px;">A. Gejala Anemia</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Jawab Ya atau Tidak untuk setiap pernyataan berikut.</p>
+        <div id="q-gejala" style="display:flex;flex-direction:column;gap:10px;">
+          <div class="qs-row" data-key="g1"><span class="qs-text">1. Kelopak mata bawah saya pucat</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g2"><span class="qs-text">2. Lidah saya pucat</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g3"><span class="qs-text">3. Kuku tangan dan kaki saya pucat</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g4"><span class="qs-text">4. Kuku tangan dan kaki saya mudah rusak</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g5"><span class="qs-text">5. Saya sering merasa pusing dan kunang-kunang</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g6"><span class="qs-text">6. Saya sering merasa letih, lemah, lesu, lunglai, dan lalai (5L)</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g7"><span class="qs-text">7. Ada anggota keluarga saya yang menderita anemia</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g8"><span class="qs-text">8. Saya pernah transfusi darah atau tambah darah</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g9"><span class="qs-text">9. Saya sering tidak nafsu makan</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g10"><span class="qs-text">10. Saya sering makan sayur dan buah</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g11"><span class="qs-text">11. Saya memiliki kebiasaan sarapan</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="g12"><span class="qs-text">12. Saya memiliki riwayat penyakit dalam 1 bulan terakhir</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:4px;">B. Riwayat Menstruasi <span style="font-size:11px;color:var(--muted);font-weight:400;">(Khusus Perempuan)</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Lewati bagian ini jika kamu laki-laki.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="app-field">
+            <label style="font-size:13px;font-weight:500;">1. Apakah kamu sudah mengalami menstruasi?</label>
+            <div class="qs-btn-wrap" style="margin-top:6px;"><button class="qs-btn" data-val="1" id="mens-ya" onclick="pilihMens(this,'sudah')">Ya</button><button class="qs-btn" data-val="0" id="mens-tidak" onclick="pilihMens(this,'belum')">Tidak</button></div>
+          </div>
+          <div id="detail-menstruasi" style="display:none;flex-direction:column;gap:12px;">
+            <div class="app-field"><label style="font-size:13px;font-weight:500;">2. Berapa lama menstruasi dalam satu siklus?</label>
+              <select id="mens-lama" style="margin-top:6px;"><option value="">Pilih durasi</option><option value="0">&lt; 3 hari</option><option value="0">3 – 7 hari</option><option value="1">&gt; 7 hari</option></select>
+            </div>
+            <div class="app-field"><label style="font-size:13px;font-weight:500;">3. Berapa kali frekuensi menstruasi dalam 1 bulan?</label>
+              <select id="mens-frek" style="margin-top:6px;"><option value="">Pilih frekuensi</option><option value="0">Sebulan 1 kali</option><option value="0">Sebulan 2 kali</option><option value="1">Sebulan &gt; 2 kali</option></select>
+            </div>
+            <div class="app-field"><label style="font-size:13px;font-weight:500;">4. Berapa kali mengganti pembalut dalam sehari?</label>
+              <select id="mens-ganti" style="margin-top:6px;"><option value="">Pilih frekuensi</option><option value="0">1 – 2 kali</option><option value="0">3 – 4 kali</option><option value="1">&gt; 4 kali</option></select>
+            </div>
+            <div class="app-field"><label style="font-size:13px;font-weight:500;">5. Alasan mengganti pembalut?</label>
+              <select id="mens-alasan" style="margin-top:6px;"><option value="">Pilih alasan</option><option value="0">Sudah penuh darah</option><option value="1">Sudah penuh dan ada gumpalan darah</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:4px;">C. Pola Makan & Nutrisi</div>
+        <div id="q-nutrisi" style="display:flex;flex-direction:column;gap:10px;">
+          <div class="qs-row" data-key="n1"><span class="qs-text">1. Saya rutin makan makanan sumber zat besi (daging, ikan, hati, bayam)</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="n2"><span class="qs-text">2. Saya sering mengkonsumsi teh/kopi bersamaan dengan makan</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="n3"><span class="qs-text">3. Saya rutin minum Tablet Tambah Darah (TTD) seminggu sekali</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+          <div class="qs-row" data-key="n4"><span class="qs-text">4. Saya sering diet ekstrem atau membatasi makan secara berlebihan</span><div class="qs-btn-wrap"><button class="qs-btn" data-val="1" onclick="pilihJawaban(this)">Ya</button><button class="qs-btn" data-val="0" onclick="pilihJawaban(this)">Tidak</button></div></div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="analyzeSymptom()">🔍 Analisis Risiko Anemia</button>
+
+      <div id="result-card" style="display:none;margin-top:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Hasil Skrining</span></div>
+          <div id="result-ring-wrap"></div>
+          <div style="text-align:center;margin-bottom:16px;">
+            <div style="font-family:'Playfair Display',serif;font-size:22px;" id="result-kategori">–</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px;" id="result-skor-text">–</div>
+          </div>
+          <div id="result-fasyankes" style="margin-bottom:14px;"></div>
+          <div class="section-title">Rekomendasi Untukmu</div>
+          <div id="result-recommendations"></div>
+          <div style="margin-top:16px;display:flex;gap:10px;">
+            <button class="btn-sm" onclick="navTo('ai');initAIWithResult();" style="flex:1;">💬 Tanya AI</button>
+            <button class="btn-sm" onclick="navTo('reminder')" style="flex:1;background:var(--success);">💊 Atur TTD</button>
+          </div>
+        </div>
+      </div>
+      <button class="back-btn-bottom" onclick="navTo('home')">← Kembali ke Beranda</button>
+    </div>
+
+    <!-- SIKLUS MENSTRUASI -->
+    <div id="page-period" class="page">
+      <div class="section-title" style="font-size:20px;">📅 Pelacak Siklus Menstruasi</div>
+      <div class="card">
+        <div class="card-header">
+          <button onclick="changeMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--red);">‹</button>
+          <span class="card-title" id="cal-month-label">Maret 2026</span>
+          <button onclick="changeMonth(1)" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--red);">›</button>
+        </div>
+        <div class="cal-header"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div>
+        <div class="period-calendar" id="period-cal"></div>
+        <div style="display:flex;gap:10px;font-size:11px;margin-top:8px;">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#FDECEA;border-radius:2px;display:inline-block;"></span>Menstruasi</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#E8F8EF;border-radius:2px;display:inline-block;"></span>Masa Subur</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:var(--red);border-radius:50%;display:inline-block;"></span>Hari Ini</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">⚙️ Hitung Siklus Berikutnya</div>
+        <div class="app-field"><label>Tanggal Mulai Menstruasi Terakhir</label><input type="date" id="period-start"></div>
+        <div class="app-field"><label>Panjang Siklus (hari)</label>
+          <select id="period-cycle"><option value="28">28 hari (rata-rata)</option><option value="21">21 hari</option><option value="24">24 hari</option><option value="30">30 hari</option><option value="35">35 hari</option></select>
+        </div>
+        <button class="btn-sm" onclick="savePeriod()">Hitung Siklus</button>
+        <div style="display:flex;gap:12px;margin-top:14px;">
+          <div style="flex:1;background:var(--cream);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:11px;color:var(--muted);">ESTIMASI SIKLUS BERIKUTNYA</div><div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--red);margin-top:4px;" id="next-period">–</div></div>
+          <div style="flex:1;background:var(--cream);border-radius:10px;padding:12px;text-align:center;"><div style="font-size:11px;color:var(--muted);">MASA SUBUR</div><div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--success);margin-top:4px;" id="fertile-window">–</div></div>
+        </div>
+      </div>
+      <button class="back-btn-bottom" onclick="navTo('home')">← Kembali ke Beranda</button>
+    </div>
+
+    <!-- PROFIL -->
+    <div id="page-profile" class="page">
+      <div class="card">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-name" id="prof-name">–</div>
+        <div class="profile-email" id="prof-email">–</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;text-align:center;">
+          <div style="background:var(--cream);border-radius:10px;padding:10px;"><div style="font-size:11px;color:var(--muted);">Hari aktif</div><div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--dark);">12</div></div>
+          <div style="background:var(--cream);border-radius:10px;padding:10px;"><div style="font-size:11px;color:var(--muted);">TTD</div><div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--success);">8</div></div>
+          <div style="background:var(--cream);border-radius:10px;padding:10px;"><div style="font-size:11px;color:var(--muted);">XP</div><div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--info);">650</div></div>
+          <div style="background:var(--cream);border-radius:10px;padding:10px;"><div style="font-size:11px;color:var(--muted);">Skrining</div><div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--warning);" id="stat-skrining">0</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">📝 Perbarui Data Fisik</div>
+        <div class="app-field"><label>Berat Badan (kg)</label><input type="number" id="upd-weight" placeholder="Berat badan"></div>
+        <div class="app-field"><label>Tinggi Badan (cm)</label><input type="number" id="upd-height" placeholder="Tinggi badan"></div>
+        <button class="btn-sm" onclick="updatePhysical()">Perbarui Data</button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">⚙️ Pengaturan</div>
+        <div class="setting-row" onclick="toggleEl('tog-notif')"><div class="setting-label">🔔 Notifikasi TTD</div><div class="toggle on" id="tog-notif"></div></div>
+        <div class="setting-row" onclick="doLogout()"><div class="setting-label" style="color:var(--red);">🚪 Keluar</div><div class="setting-arrow">›</div></div>
+      </div>
+      <button class="back-btn-bottom" onclick="navTo('home')">← Kembali ke Beranda</button>
+    </div>
+
+    <!-- PENGINGAT TTD -->
+    <div id="page-reminder" class="page">
+      <div class="section-title" style="font-size:20px;">💊 Pengingat Minum Tablet Tambah Darah</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Atur jadwal pengingat TTD kamu — seminggu sekali pada hari dan jam yang kamu tentukan.</p>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:4px;">⚙️ Atur Jadwal Pengingat</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Pilih hari dalam seminggu dan jam minum TTD kamu.</p>
+        <div class="app-field">
+          <label>Pilih Hari</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;" id="reminder-days-wrap">
+            <button class="reminder-day-btn" data-day="0" onclick="selectReminderDay(0)">Min</button>
+            <button class="reminder-day-btn" data-day="1" onclick="selectReminderDay(1)">Sen</button>
+            <button class="reminder-day-btn" data-day="2" onclick="selectReminderDay(2)">Sel</button>
+            <button class="reminder-day-btn" data-day="3" onclick="selectReminderDay(3)">Rab</button>
+            <button class="reminder-day-btn" data-day="4" onclick="selectReminderDay(4)">Kam</button>
+            <button class="reminder-day-btn" data-day="5" onclick="selectReminderDay(5)">Jum</button>
+            <button class="reminder-day-btn" data-day="6" onclick="selectReminderDay(6)">Sab</button>
+          </div>
+        </div>
+        <div class="app-field"><label>Pilih Jam</label><input type="time" id="reminder-time" value="07:00" style="width:100%;padding:11px 14px;border:2px solid #EDE0DC;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--cream);outline:none;"></div>
+        <div class="app-field"><label>Catatan (opsional)</label><input type="text" id="reminder-note" placeholder="Contoh: Minum setelah makan siang" style="width:100%;padding:11px 14px;border:2px solid #EDE0DC;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--cream);outline:none;"></div>
+        <button class="btn-primary" onclick="saveReminder()">💾 Simpan Pengingat</button>
+      </div>
+      <div class="card" id="reminder-status-card" style="display:none;">
+        <div class="card-header"><span class="card-title">✅ Pengingat Aktif</span><button onclick="deleteReminder()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;font-weight:700;">Hapus</button></div>
+        <div style="background:linear-gradient(135deg,#E8F8EF,#D0F0E0);border-radius:12px;padding:16px;border:2px solid #27AE60;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:36px;">💊</div>
+            <div style="flex:1;"><div style="font-weight:700;color:#1A5C35;font-size:15px;" id="reminder-active-label">–</div><div style="font-size:12px;color:#2E8B57;margin-top:3px;" id="reminder-active-note">–</div></div>
+          </div>
+        </div>
+        <div style="margin-top:14px;"><div style="font-size:13px;font-weight:700;color:var(--dark);margin-bottom:10px;">Countdown Berikutnya</div><div id="reminder-countdown" style="text-align:center;font-family:'Playfair Display',serif;font-size:28px;color:var(--red);padding:12px;background:var(--cream);border-radius:12px;">–</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">📋 Riwayat Konsumsi TTD</div>
+        <div id="reminder-history-list"><div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada riwayat.</div></div>
+        <button class="btn-sm" onclick="markTTDTaken()" style="margin-top:12px;width:100%;background:var(--success);">✅ Tandai Sudah Minum TTD Hari Ini</button>
+      </div>
+      <div class="alert alert-warning"><span>💡</span><span><b>Ingat:</b> TTD sebaiknya diminum 1 tablet per minggu, setelah makan, dengan air putih atau jus jeruk. Hindari minum bersama teh, kopi, atau susu.</span></div>
+      <button class="back-btn-bottom" onclick="navTo('home')">← Kembali ke Beranda</button>
+    </div>
+
+    <!-- ANEMIACARE AI CHATBOT -->
+    <div id="page-ai" class="page">
+      <div class="ai-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:42px;height:42px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">🤖</div>
+          <div>
+            <div class="ai-header-title">AnemiaCare AI</div>
+            <div class="ai-header-sub">Profesional · Modern · Pendamping Kesehatan Anemia</div>
+          </div>
+        </div>
+        <div class="ai-status"><span class="ai-status-dot"></span><span>Online</span></div>
+      </div>
+
+      <div id="ai-result-banner" style="display:none;" class="ai-result-banner">
+        <span style="font-size:18px;">📋</span>
+        <div><div style="font-weight:700;margin-bottom:2px;">Hasil Skrining Tersimpan</div><div id="ai-result-text" style="font-size:12px;"></div></div>
+      </div>
+
+      <div class="quick-questions" id="quick-questions">
+        <div class="quick-q" onclick="sendQuickQ(this)">Apa itu anemia?</div>
+        <div class="quick-q" onclick="sendQuickQ(this)">Gejala anemia apa saja?</div>
+        <div class="quick-q" onclick="sendQuickQ(this)">Makanan untuk anemia?</div>
+        <div class="quick-q" onclick="sendQuickQ(this)">Kapan harus ke dokter?</div>
+        <div class="quick-q" onclick="sendQuickQ(this)">Anemia saat menstruasi?</div>
+        <div class="quick-q" onclick="sendQuickQ(this)">Cara minum TTD yang benar?</div>
+      </div>
+
+      <div class="chat-area" id="chat-area"></div>
+
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chat-input" placeholder="Ketik pertanyaanmu seputar anemia..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="chat-send-btn" id="chat-send-btn" onclick="sendChat()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+
+      <div class="ai-back-bottom">
+        <button class="back-btn-bottom" onclick="navTo('home')">← Kembali ke Beranda</button>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav" id="bottom-nav" style="display:none;">
+    <div class="nav-item active" id="nav-home" onclick="navTo('home')"><span class="nav-icon">🏠</span><span class="nav-label">Beranda</span></div>
+    <div class="nav-item" id="nav-symptom" onclick="navTo('symptom')"><span class="nav-icon">🩺</span><span class="nav-label">Skrining</span></div>
+    <div class="nav-item" id="nav-period" onclick="navTo('period')"><span class="nav-icon">📅</span><span class="nav-label">Siklus</span></div>
+    <div class="nav-item" id="nav-reminder" onclick="navTo('reminder')"><span class="nav-icon">💊</span><span class="nav-label">TTD</span></div>
+    <div class="nav-item" id="nav-ai" onclick="navTo('ai')"><span class="nav-icon">🤖</span><span class="nav-label">AI</span></div>
+  </nav>
+</div>
+
+<script>
+// STATE
+var users = {};
+try { users = JSON.parse(localStorage.getItem('irontrack_v2') || '{}'); } catch(e) {}
+var currentUser = null;
+var calYear = 2026, calMonth = 2;
+var periodDays = new Set([1,2,3,4,5,6,7]);
+var mensStatus = '';
+var reminderData = null, selectedReminderDay = -1, countdownInterval = null;
+var ttdHistory = [];
+try { ttdHistory = JSON.parse(localStorage.getItem('irontrack_ttd_history') || '[]'); } catch(e) {}
+var reminderDayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+var lastSkriningResult = null;
+var skriningCount = 0;
+var chatHistory = [];
+var aiIsTyping = false;
+
+// TOAST
+var _toastTimer = null;
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.textContent = msg;
+  void t.offsetWidth;
+  t.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// SCREEN
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// REGISTER
+function calcAge() {
+  var dob = document.getElementById('r-dob').value;
+  var hint = document.getElementById('r-age-hint');
+  if (!dob) { hint.textContent = ''; return; }
+  var lahir = new Date(dob), now = new Date();
+  var age = now.getFullYear() - lahir.getFullYear();
+  if (now.getMonth() < lahir.getMonth() || (now.getMonth() === lahir.getMonth() && now.getDate() < lahir.getDate())) age--;
+  hint.textContent = age >= 0 ? 'Usia: ' + age + ' tahun' : '';
+}
+
+function doRegister() {
+  var name   = document.getElementById('r-name').value.trim();
+  var email  = document.getElementById('r-email').value.trim().toLowerCase();
+  var pass   = document.getElementById('r-pass').value;
+  var dob    = document.getElementById('r-dob').value;
+  var edu    = document.getElementById('r-edu').value;
+  var weight = document.getElementById('r-weight').value;
+  var height = document.getElementById('r-height').value;
+  if (!name)   { showToast('⚠️ Nama lengkap wajib diisi', 'warn'); return; }
+  if (!email || email.indexOf('@') < 1)  { showToast('⚠️ Email tidak valid', 'warn'); return; }
+  if (!pass || pass.length < 6) { showToast('⚠️ Kata sandi minimal 6 karakter', 'warn'); return; }
+  if (!dob)    { showToast('⚠️ Tanggal lahir wajib diisi', 'warn'); return; }
+  if (!edu)    { showToast('⚠️ Pilih jenjang pendidikan', 'warn'); return; }
+  if (users[email]) { showToast('⚠️ Email sudah terdaftar', 'warn'); return; }
+  var lahir = new Date(dob), now = new Date();
+  var age = now.getFullYear() - lahir.getFullYear();
+  if (now.getMonth() < lahir.getMonth() || (now.getMonth() === lahir.getMonth() && now.getDate() < lahir.getDate())) age--;
+  users[email] = { name:name, email:email, pass:pass, age:age, dob:dob, edu:edu, weight:weight||'', height:height||'' };
+  localStorage.setItem('irontrack_v2', JSON.stringify(users));
+  showToast('✅ Akun berhasil dibuat! Silakan masuk.', 'success');
+  setTimeout(function() { showScreen('login'); document.getElementById('login-email').value = email; }, 1800);
+}
+
+// LOGIN / LOGOUT
+function doLogin() {
+  var email = document.getElementById('login-email').value.trim().toLowerCase();
+  var pass  = document.getElementById('login-pass').value;
+  if (!email) { showToast('⚠️ Masukkan email', 'warn'); return; }
+  if (!pass)  { showToast('⚠️ Masukkan kata sandi', 'warn'); return; }
+  var user = users[email];
+  if (!user)           { showToast('❌ Email tidak terdaftar', 'error'); return; }
+  if (user.pass !== pass) { showToast('❌ Kata sandi salah', 'error'); return; }
+  currentUser = user;
+  initApp();
+  showScreen('app');
+  setTimeout(function(){ showToast('👋 Selamat datang, ' + user.name.split(' ')[0] + '!', 'success'); }, 300);
+}
+
+function doLogout() {
+  currentUser = null;
+  showToast('👋 Sampai jumpa!');
+  setTimeout(function(){ showScreen('landing'); }, 900);
+}
+
+// APP INIT
+function initApp() {
+  var u = currentUser;
+  document.getElementById('topbar-name').textContent = 'Halo, ' + u.name.split(' ')[0];
+  document.getElementById('prof-name').textContent   = u.name;
+  document.getElementById('prof-email').textContent  = u.email;
+  document.getElementById('bottom-nav').style.display = 'flex';
+  var h = new Date().getHours();
+  var sapa = h < 11 ? 'Selamat Pagi! 🌅' : h < 15 ? 'Selamat Siang! ☀️' : 'Selamat Sore! 🌙';
+  document.getElementById('greeting-text').textContent = sapa + ' ' + u.name.split(' ')[0];
+  var w = parseFloat(u.weight), ht = parseFloat(u.height);
+  if (w > 0 && ht > 0) {
+    var imt = (w / Math.pow(ht/100, 2)).toFixed(1);
+    document.getElementById('home-weight').textContent  = w;
+    document.getElementById('home-height').textContent  = ht;
+    document.getElementById('home-imt').textContent     = imt;
+    document.getElementById('home-imt-cat').textContent = imt<18.5?'Kurus':imt<25?'Normal':imt<30?'Gemuk':'Obesitas';
+    document.getElementById('upd-weight').value = w;
+    document.getElementById('upd-height').value = ht;
+  }
+  renderCalendar();
+  try { reminderData = JSON.parse(localStorage.getItem('irontrack_reminder')); } catch(e) {}
+  renderReminderStatus();
+  renderTTDHistory();
+  initAIChat();
+}
+
+// NAVIGATION
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  var target = document.getElementById('page-' + page);
+  if (target) { target.classList.add('active'); }
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var ni = document.getElementById('nav-' + page);
+  if (ni) ni.classList.add('active');
+  window.scrollTo(0, 0);
+  if (page === 'reminder') { renderReminderStatus(); renderTTDHistory(); }
+}
+
+// KUESIONER
+function pilihJawaban(btn) {
+  var row = btn.closest('.qs-row');
+  row.querySelectorAll('.qs-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function pilihMens(btn, status) {
+  mensStatus = status;
+  document.getElementById('mens-ya').classList.remove('active');
+  document.getElementById('mens-tidak').classList.remove('active');
+  btn.classList.add('active');
+  document.getElementById('detail-menstruasi').style.display = (status === 'sudah') ? 'flex' : 'none';
+}
+
+function getRowScore(key) {
+  var row = document.querySelector('.qs-row[data-key="'+key+'"]');
+  if (!row) return null;
+  var active = row.querySelector('.qs-btn.active');
+  return active ? parseInt(active.getAttribute('data-val')) : null;
+}
+
+function analyzeSymptom() {
+  var gejalaSkor = 0, gejalaTerjawab = true;
+  var gejalKeys = ['g1','g2','g3','g4','g5','g6','g7','g8','g9','g10','g11','g12'];
+  for (var i=0; i<gejalKeys.length; i++) {
+    var v = getRowScore(gejalKeys[i]);
+    if (v === null) { gejalaTerjawab = false; break; }
+    gejalaSkor += v;
+  }
+  if (!gejalaTerjawab) { showToast('⚠️ Harap jawab semua pertanyaan Bagian A', 'warn'); return; }
+  var mensSkor = 0;
+  if (mensStatus === '') { showToast('⚠️ Harap jawab pertanyaan menstruasi (Bagian B)', 'warn'); return; }
+  if (mensStatus === 'sudah') {
+    var lama   = document.getElementById('mens-lama').value;
+    var frek   = document.getElementById('mens-frek').value;
+    var ganti  = document.getElementById('mens-ganti').value;
+    var alasan = document.getElementById('mens-alasan').value;
+    if (lama===''||frek===''||ganti===''||alasan==='') { showToast('⚠️ Lengkapi semua pertanyaan menstruasi', 'warn'); return; }
+    mensSkor = 1 + parseInt(lama) + parseInt(frek) + parseInt(ganti) + parseInt(alasan);
+  }
+  var nutrisiSkor = 0, nutrisiTerjawab = true;
+  var nutrisiKeys = ['n1','n2','n3','n4'];
+  for (var j=0; j<nutrisiKeys.length; j++) {
+    var nv = getRowScore(nutrisiKeys[j]);
+    if (nv === null) { nutrisiTerjawab = false; break; }
+    nutrisiSkor += nv;
+  }
+  if (!nutrisiTerjawab) { showToast('⚠️ Harap jawab semua pertanyaan Bagian C', 'warn'); return; }
+  var totalSkor = gejalaSkor + mensSkor + nutrisiSkor;
+  var level, lbl, em, kategori;
+  if (totalSkor <= 5)       { level='low';    lbl='Risiko Rendah';   em='😊'; kategori='Tidak Anemia / Risiko Rendah'; }
+  else if (totalSkor <= 10) { level='medium'; lbl='Risiko Ringan';   em='😐'; kategori='Risiko Anemia Ringan'; }
+  else if (totalSkor <= 15) { level='medium'; lbl='Risiko Sedang';   em='😟'; kategori='Risiko Anemia Sedang'; }
+  else                      { level='high';   lbl='Risiko Tinggi';   em='😰'; kategori='Risiko Anemia Tinggi'; }
+  lastSkriningResult = { skor:totalSkor, level:level, label:lbl, kategori:kategori, gejala:gejalaSkor, mens:mensSkor, nutrisi:nutrisiSkor, mensStatus:mensStatus };
+  skriningCount++;
+  var statEl = document.getElementById('stat-skrining');
+  if (statEl) statEl.textContent = skriningCount;
+  var badge = document.getElementById('home-risk-badge');
+  if (badge) {
+    var ldata = {high:['badge-danger','Tinggi'],medium:['badge-warning','Sedang'],low:['badge-success','Rendah']};
+    badge.className = 'badge '+ldata[level][0];
+    badge.textContent = ldata[level][1];
+    document.getElementById('home-risk-text').textContent = kategori + ' · Skor ' + totalSkor + '/21';
+    document.getElementById('home-last-result').style.display = 'block';
+  }
+  var recs = {
+    low: ['Pertahankan pola makan bergizi seimbang','Tetap rutin minum TTD 1x seminggu','Lakukan aktivitas fisik ringan secara teratur','Pantau kondisi kesehatan secara berkala'],
+    medium: ['Tingkatkan konsumsi makanan kaya zat besi','Minum TTD secara rutin tanpa melewatkan','Konsumsi vitamin C untuk membantu penyerapan zat besi','Konsultasikan ke tenaga kesehatan jika gejala berlanjut','Kurangi konsumsi teh/kopi saat makan'],
+    high: ['⚠️ Segera periksakan diri ke puskesmas atau dokter','Lakukan pemeriksaan kadar Hb (hemoglobin)','Ikuti petunjuk pengobatan dari dokter','Konsumsi makanan tinggi zat besi setiap hari','Hindari konsumsi zat yang menghambat penyerapan besi']
+  };
+  document.getElementById('result-ring-wrap').innerHTML = '<div class="result-ring '+level+'"><div class="r-emoji">'+em+'</div><div class="r-label">'+lbl+'</div></div>';
+  document.getElementById('result-kategori').textContent = kategori;
+  document.getElementById('result-skor-text').textContent = 'Total Skor: '+totalSkor+'/21  ·  Gejala: '+gejalaSkor+'/12  ·  Menstruasi: '+mensSkor+'/5  ·  Nutrisi: '+nutrisiSkor+'/4';
+  var fasEl = document.getElementById('result-fasyankes');
+  if (level === 'high') {
+    fasEl.style.display = 'block';
+    fasEl.innerHTML = '<div class="alert alert-danger"><span style="font-size:20px;">🏥</span><div><div style="font-weight:700;">Segera ke Fasilitas Kesehatan!</div><div style="margin-top:4px;font-size:12px;">Skor kamu cukup tinggi. Kami menyarankan kamu untuk segera memeriksakan diri ke puskesmas atau dokter terdekat untuk pemeriksaan Hb dan tindakan lebih lanjut.</div></div></div>';
+  } else { fasEl.style.display = 'none'; }
+  document.getElementById('result-recommendations').innerHTML = recs[level].map(function(r){ return '<div class="recommend-item"><div class="rec-dot"></div><div class="rec-text">'+r+'</div></div>'; }).join('');
+  var rc = document.getElementById('result-card');
+  rc.style.display = 'block';
+  rc.scrollIntoView({behavior:'smooth'});
+  showToast('✅ Skrining selesai! Skor: '+totalSkor+'/21', 'success');
+}
+
+// KALENDER
+function renderCalendar() {
+  var months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  document.getElementById('cal-month-label').textContent = months[calMonth]+' '+calYear;
+  var firstDay=new Date(calYear,calMonth,1).getDay(), daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  var today=new Date(), isCur=today.getFullYear()===calYear&&today.getMonth()===calMonth;
+  var html='';
+  for(var i=0;i<firstDay;i++) html+='<div class="cal-day other"></div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var cls='cal-day';
+    if(isCur&&d===today.getDate()) cls+=' today';
+    else if(periodDays.has(d)) cls+=' period';
+    else if(d>=19&&d<=23) cls+=' fertile';
+    html+='<div class="'+cls+'" onclick="togglePeriodDay('+d+')">'+d+'</div>';
+  }
+  document.getElementById('period-cal').innerHTML=html;
+}
+function changeMonth(dir){ calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function togglePeriodDay(d){ periodDays.has(d)?periodDays.delete(d):periodDays.add(d); renderCalendar(); }
+function savePeriod() {
+  var start=new Date(document.getElementById('period-start').value);
+  var cycle=parseInt(document.getElementById('period-cycle').value);
+  var next=new Date(start); next.setDate(next.getDate()+cycle);
+  var f1=new Date(next); f1.setDate(f1.getDate()-16);
+  var f2=new Date(next); f2.setDate(f2.getDate()-12);
+  var mo=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  document.getElementById('next-period').textContent = next.getDate()+' '+mo[next.getMonth()];
+  document.getElementById('fertile-window').textContent = f1.getDate()+'–'+f2.getDate()+' '+mo[f1.getMonth()];
+  showToast('✅ Data siklus berhasil disimpan!', 'success');
+}
+
+// PROFILE
+function updatePhysical() {
+  var w = document.getElementById('upd-weight').value;
+  var h = document.getElementById('upd-height').value;
+  if (!w || !h) { showToast('⚠️ Isi berat dan tinggi badan', 'warn'); return; }
+  currentUser.weight = w; currentUser.height = h;
+  users[currentUser.email] = currentUser;
+  localStorage.setItem('irontrack_v2', JSON.stringify(users));
+  var imt = (parseFloat(w) / Math.pow(parseFloat(h)/100, 2)).toFixed(1);
+  document.getElementById('home-weight').textContent = w;
+  document.getElementById('home-height').textContent = h;
+  document.getElementById('home-imt').textContent = imt;
+  document.getElementById('home-imt-cat').textContent = imt<18.5?'Kurus':imt<25?'Normal':imt<30?'Gemuk':'Obesitas';
+  showToast('✅ Data fisik diperbarui!', 'success');
+}
+function toggleEl(id) { var el=document.getElementById(id); if(el) el.classList.toggle('on'); }
+
+// PENGINGAT TTD
+function selectReminderDay(dayIndex) {
+  selectedReminderDay = dayIndex;
+  document.querySelectorAll('.reminder-day-btn').forEach(function(btn){
+    btn.classList.remove('active');
+    if (parseInt(btn.getAttribute('data-day')) === dayIndex) btn.classList.add('active');
+  });
+}
+function saveReminder() {
+  if (selectedReminderDay < 0) { showToast('⚠️ Pilih hari terlebih dahulu', 'warn'); return; }
+  var time = document.getElementById('reminder-time').value;
+  if (!time) { showToast('⚠️ Pilih jam pengingat', 'warn'); return; }
+  var note = document.getElementById('reminder-note').value.trim();
+  reminderData = { day: selectedReminderDay, time: time, note: note };
+  try { localStorage.setItem('irontrack_reminder', JSON.stringify(reminderData)); } catch(e) {}
+  showToast('✅ Pengingat berhasil disimpan!', 'success');
+  renderReminderStatus();
+}
+function deleteReminder() {
+  reminderData = null; selectedReminderDay = -1;
+  try { localStorage.removeItem('irontrack_reminder'); } catch(e) {}
+  document.querySelectorAll('.reminder-day-btn').forEach(function(btn){ btn.classList.remove('active'); });
+  document.getElementById('reminder-status-card').style.display = 'none';
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  showToast('🗑️ Pengingat dihapus', 'warn');
+}
+function renderReminderStatus() {
+  if (!reminderData) { document.getElementById('reminder-status-card').style.display = 'none'; return; }
+  document.getElementById('reminder-status-card').style.display = 'block';
+  document.getElementById('reminder-active-label').textContent = 'Setiap ' + reminderDayNames[reminderData.day] + ' pukul ' + reminderData.time;
+  document.getElementById('reminder-active-note').textContent = reminderData.note ? '📝 ' + reminderData.note : '💊 Tablet Tambah Darah mingguan';
+  selectReminderDay(reminderData.day);
+  document.getElementById('reminder-time').value = reminderData.time;
+  if (reminderData.note) document.getElementById('reminder-note').value = reminderData.note;
+  updateCountdown();
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
+function updateCountdown() {
+  if (!reminderData) return;
+  var now = new Date(), targetDay = reminderData.day;
+  var tParts = reminderData.time.split(':'), tH = parseInt(tParts[0]), tM = parseInt(tParts[1]);
+  var next = new Date(now); next.setHours(tH, tM, 0, 0);
+  var diff = targetDay - now.getDay();
+  if (diff < 0) diff += 7;
+  if (diff === 0 && next <= now) diff = 7;
+  next.setDate(next.getDate() + diff);
+  var ms = next - now;
+  var days  = Math.floor(ms / 86400000);
+  var hours = Math.floor((ms % 86400000) / 3600000);
+  var mins  = Math.floor((ms % 3600000) / 60000);
+  var secs  = Math.floor((ms % 60000) / 1000);
+  var txt = days > 0 ? days + ' hari ' + hours + ' jam lagi' : hours > 0 ? hours + ' jam ' + mins + ' menit lagi' : mins > 0 ? mins + ' menit ' + secs + ' detik lagi' : secs + ' detik lagi';
+  document.getElementById('reminder-countdown').textContent = txt;
+}
+function markTTDTaken() {
+  var now = new Date();
+  var mo = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  var label = now.getDate()+' '+mo[now.getMonth()]+' '+now.getFullYear()+', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  ttdHistory.unshift({ date: label, status: 'taken' });
+  if (ttdHistory.length > 12) ttdHistory.length = 12;
+  try { localStorage.setItem('irontrack_ttd_history', JSON.stringify(ttdHistory)); } catch(e) {}
+  renderTTDHistory();
+  showToast('💊 TTD hari ini sudah dicatat! +20 XP', 'success');
+}
+function renderTTDHistory() {
+  var el = document.getElementById('reminder-history-list');
+  if (!el) return;
+  if (!ttdHistory.length) { el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Belum ada riwayat.</div>'; return; }
+  el.innerHTML = ttdHistory.map(function(h) {
+    var icon = h.status === 'taken' ? '✅' : '❌';
+    var label = h.status === 'taken' ? 'Sudah diminum' : 'Terlewat';
+    var dotClass = h.status === 'taken' ? 'taken' : 'missed';
+    return '<div class="reminder-history-item"><div class="reminder-dot '+dotClass+'"></div><div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--dark);">'+icon+' '+label+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+h.date+'</div></div></div>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────
+//   ANEMIACARE AI — fixed API integration
+// ─────────────────────────────────────────
+function buildSystemPrompt() {
+  var base = [
+    'Kamu adalah AnemiaCare AI, asisten kesehatan digital yang profesional, hangat, dan terpercaya khusus untuk membantu pengguna memahami dan mengelola anemia, terutama anemia defisiensi besi pada remaja putri.',
+    '',
+    'IDENTITAS & KEPRIBADIAN:',
+    '- Nama: AnemiaCare AI, bagian dari aplikasi IronTrack',
+    '- Gaya bicara: ramah, hangat, profesional seperti petugas kesehatan/bidan yang bersahabat',
+    '- Bahasa: Indonesia yang baik dan mudah dipahami, boleh sesekali menggunakan bahasa gaul ringan agar dekat dengan remaja',
+    '- Selalu empati, tidak menghakimi, dan mendukung pengguna',
+    '',
+    'RUANG LINGKUP TOPIK:',
+    '1. ANEMIA UMUM: definisi, jenis, penyebab, gejala (5L: lemah, lesu, lelah, lunglai, lalai; pucat, pusing, jantung berdebar, sesak nafas, kuku rapuh, lidah pucat), diagnosis, pengobatan',
+    '2. ANEMIA & MENSTRUASI: hubungan menstruasi dengan anemia, menorrhagia, siklus haid, dysmenorrhea, PCOS',
+    '3. NUTRISI & ZAT BESI: makanan kaya zat besi (heme & non-heme), enhancer (vitamin C), inhibitor (teh, kopi, kalsium), kebutuhan harian remaja putri 15-18 mg/hari',
+    '4. TABLET TAMBAH DARAH (TTD): dosis, jadwal 1 tablet/minggu, cara konsumsi, efek samping, penyimpanan',
+    '5. PENCEGAHAN & GAYA HIDUP: pola makan sehat, olahraga, istirahat, manajemen stres',
+    '6. KAPAN KE DOKTER: tanda darurat, pemeriksaan Hb (normal wanita: 12-16 g/dL, ringan: 10-11.9, sedang: 8-9.9, berat: <8)',
+    '',
+    'PANDUAN MENJAWAB:',
+    '- Informasi akurat berdasarkan WHO, Kemenkes RI, jurnal medis',
+    '- Singkat untuk pertanyaan sederhana, detail dengan poin-poin untuk pertanyaan kompleks',
+    '- Selalu tambahkan catatan "konsultasikan ke dokter/tenaga kesehatan" jika diperlukan',
+    '- Gunakan emoji secukupnya',
+    '- JANGAN memberikan diagnosis pasti atau meresepkan obat spesifik',
+    '- Jika pertanyaan di luar topik kesehatan, sopan arahkan kembali ke topik anemia',
+  ].join('\n');
+
+  if (lastSkriningResult) {
+    var r = lastSkriningResult;
+    base += '\n\nDATA PENGGUNA DARI SKRINING:\n';
+    base += 'Hasil skrining: ' + r.kategori + ' (Skor ' + r.skor + '/21)\n';
+    base += 'Detail: Gejala=' + r.gejala + '/12, Menstruasi=' + r.mens + '/5, Nutrisi=' + r.nutrisi + '/4\n';
+    base += 'Status menstruasi: ' + (r.mensStatus === 'sudah' ? 'Sudah' : 'Belum/tidak') + '\n';
+    base += 'Gunakan data skrining ini untuk jawaban yang lebih personal.';
+  }
+  if (currentUser) {
+    base += '\nNama pengguna: ' + currentUser.name.split(' ')[0];
+    if (!lastSkriningResult) base += '. Pengguna belum melakukan skrining.';
+  }
+  return base;
+}
+
+function initAIChat() {
+  chatHistory = [];
+  var chatArea = document.getElementById('chat-area');
+  chatArea.innerHTML = '';
+  document.getElementById('quick-questions').style.display = 'flex';
+  var userName = currentUser ? currentUser.name.split(' ')[0] : 'Kak';
+  addBotMessage('Halo ' + userName + '! 👋 Aku <b>AnemiaCare AI</b>, pendamping kesehatanmu seputar anemia.<br><br>Aku bisa menjawab pertanyaanmu tentang:<br>🩸 Gejala & penyebab anemia<br>🍽️ Nutrisi & makanan untuk anemia<br>📅 Anemia & siklus menstruasi<br>💊 Cara minum Tablet Tambah Darah<br>🏥 Kapan harus ke dokter<br><br>Silakan tanya apa saja! Kamu bisa ketik atau pilih pertanyaan cepat di atas 👆');
+}
+
+function initAIWithResult() {
+  var r = lastSkriningResult;
+  if (!r) return;
+  updateAIResultBanner();
+  var userName = currentUser ? currentUser.name.split(' ')[0] : 'Kak';
+  var msg = 'Halo ' + userName + '! Aku sudah melihat hasil skriningmu: <b>' + r.kategori + ' (Skor ' + r.skor + '/21)</b>. ';
+  if (r.level === 'high') msg += '⚠️ Karena skormu cukup tinggi, aku sangat menyarankan kamu segera memeriksakan diri ke puskesmas atau dokter.<br><br>Ada yang ingin kamu tanyakan lebih lanjut?';
+  else if (r.level === 'medium') msg += '📋 Ada beberapa hal yang perlu diperhatikan. Aku siap menjelaskan lebih detail.<br><br>Ada pertanyaan tentang anemia atau kesehatanmu?';
+  else msg += '✅ Bagus! Kondisimu saat ini risiko rendah. Tetap jaga pola makan dan rutin minum TTD ya!<br><br>Ada yang ingin kamu tanyakan?';
+  chatHistory = [];
+  document.getElementById('chat-area').innerHTML = '';
+  document.getElementById('quick-questions').style.display = 'flex';
+  addBotMessage(msg);
+}
+
+function updateAIResultBanner() {
+  var banner = document.getElementById('ai-result-banner');
+  var textEl = document.getElementById('ai-result-text');
+  if (lastSkriningResult) {
+    banner.style.display = 'flex';
+    var r = lastSkriningResult;
+    var color = r.level === 'high' ? '#C0392B' : r.level === 'medium' ? '#E67E22' : '#27AE60';
+    textEl.innerHTML = '<span style="font-weight:700;color:'+color+';">'+r.kategori+'</span> &nbsp;·&nbsp; Skor '+r.skor+'/21';
+  } else { banner.style.display = 'none'; }
+}
+
+function addBotMessage(html) {
+  var chatArea = document.getElementById('chat-area');
+  var div = document.createElement('div');
+  div.className = 'chat-bubble bot';
+  div.innerHTML = html;
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function addUserMessage(text) {
+  var chatArea = document.getElementById('chat-area');
+  var div = document.createElement('div');
+  div.className = 'chat-bubble user';
+  div.textContent = text;
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showTyping() {
+  var chatArea = document.getElementById('chat-area');
+  var div = document.createElement('div');
+  div.className = 'chat-bubble typing';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function removeTyping() {
+  var el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function sendQuickQ(el) { sendChatMessage(el.textContent); }
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function sendChat() {
+  var input = document.getElementById('chat-input');
+  var text = input.value.trim();
+  if (!text || aiIsTyping) return;
+  input.value = '';
+  input.style.height = '44px';
+  sendChatMessage(text);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//   ANEMIACARE AI — Knowledge Base Lengkap v3.0
+//   Sistem pencarian berbasis skor bobot kata kunci
+// ═══════════════════════════════════════════════════════════════
+
+var AIDB = [
+
+  // ── SAPAAN & IDENTITAS ──────────────────────────────────────
+  {
+    id: 'salam',
+    tags: ['halo','hai','hi','hey','selamat pagi','selamat siang','selamat malam','permisi','hei','assalamualaikum','salam'],
+    answer: function(u){
+      var n = currentUser ? ' ' + currentUser.name.split(' ')[0] : '';
+      return 'Halo' + n + '! 👋 Selamat datang di <b>AnemiaCare AI</b>.<br><br>Aku siap membantu menjawab pertanyaan seputar:<br>🩸 Anemia & gejalanya<br>📅 Siklus menstruasi & hubungannya dengan anemia<br>🥗 Nutrisi & zat besi<br>💊 Tablet Tambah Darah (TTD)<br>🏥 Kapan harus ke dokter<br><br>Silakan tanya apa saja ya! 😊';
+    }
+  },
+  {
+    id: 'identitas',
+    tags: ['siapa kamu','kamu siapa','apa itu irontrack','irontrack itu apa','apa itu anemiacare','kamu ai apa','kamu robot','kamu bisa apa','fitur kamu','kemampuan kamu'],
+    answer: '🤖 Aku adalah <b>AnemiaCare AI</b>, asisten kesehatan digital dari aplikasi <b>IronTrack</b>.<br><br>Aku dirancang khusus untuk membantu remaja putri Indonesia memahami dan mengelola anemia. Informasi yang aku berikan bersumber dari <b>WHO, Kemenkes RI, dan jurnal medis terpercaya</b>.<br><br>Aku bisa menjawab pertanyaan tentang:<br>• Definisi, gejala, dan penyebab anemia<br>• Hubungan menstruasi dengan anemia<br>• Nutrisi dan makanan untuk anemia<br>• Tablet Tambah Darah (TTD)<br>• Kapan perlu ke dokter<br>• Dan banyak lagi!<br><br><i>⚠️ Aku bukan pengganti dokter ya. Untuk diagnosis dan pengobatan, tetap konsultasikan ke tenaga kesehatan.</i>'
+  },
+  {
+    id: 'terimakasih',
+    tags: ['terima kasih','makasih','thanks','thank you','thx','tengkyu','tq','makasih ya','trims'],
+    answer: 'Sama-sama ya! 😊 Senang bisa membantu. Jaga kesehatan, rutin minum TTD, dan jangan lupa makan bergizi! 💪🩸<br><br>Ada lagi yang ingin kamu tanyakan?'
+  },
+  {
+    id: 'bagus',
+    tags: ['oke','ok','baik','iya','ya','ngerti','paham','mengerti','oh iya','oh ok','sip','mantap','keren'],
+    answer: 'Oke! 😊 Kalau masih ada yang ingin ditanyakan seputar anemia atau menstruasi, jangan sungkan tanya ya! Aku selalu siap membantu. 💪'
+  },
+
+  // ── DEFINISI & DASAR ANEMIA ──────────────────────────────────
+  {
+    id: 'definisi_anemia',
+    tags: ['apa itu anemia','definisi anemia','pengertian anemia','anemia adalah','anemia artinya','anemia itu apa','jelaskan anemia','anemia secara umum','apa yang dimaksud anemia','maksud anemia'],
+    answer: '🩸 <b>Apa itu Anemia?</b><br><br>Anemia adalah kondisi ketika jumlah <b>sel darah merah (eritrosit)</b> atau kadar <b>hemoglobin (Hb)</b> dalam darah berada di bawah nilai normal, sehingga tubuh kekurangan oksigen.<br><br>📊 <b>Nilai Normal Hemoglobin:</b><br>• Wanita dewasa & remaja putri: <b>≥ 12 g/dL</b><br>• Ibu hamil: <b>≥ 11 g/dL</b><br>• Anak 6–11 tahun: <b>≥ 11,5 g/dL</b><br><br>📊 <b>Derajat Anemia:</b><br>• Ringan: Hb 10–11,9 g/dL<br>• Sedang: Hb 8–9,9 g/dL<br>• Berat: Hb &lt; 8 g/dL<br><br>🌍 Di Indonesia, <b>1 dari 3 remaja putri</b> mengalami anemia. Ini adalah masalah kesehatan serius yang bisa berdampak pada prestasi belajar, produktivitas, dan kehamilan di masa depan.<br><br><i>💡 Anemia bukan penyakit menular, tapi bisa dicegah dan diobati!</i>'
+  },
+  {
+    id: 'jenis_anemia',
+    tags: ['jenis anemia','macam anemia','tipe anemia','jenis-jenis anemia','anemia apa saja','macam-macam anemia','klasifikasi anemia','anemia megaloblastik','anemia aplastik','anemia hemolitik','anemia sel sabit','thalasemia','anemia pernisiosa'],
+    answer: '📚 <b>Jenis-Jenis Anemia:</b><br><br>1️⃣ <b>Anemia Defisiensi Besi (ADB)</b> — paling umum<br>Penyebab: kekurangan zat besi. Ditandai sel darah merah kecil & pucat (mikrositik hipokromik).<br><br>2️⃣ <b>Anemia Defisiensi Asam Folat & B12</b><br>Penyebab: kurang folat/B12. Sel darah merah besar tapi sedikit (megaloblastik).<br><br>3️⃣ <b>Anemia Aplastik</b><br>Sumsum tulang tidak bisa memproduksi sel darah. Jarang tapi serius.<br><br>4️⃣ <b>Anemia Hemolitik</b><br>Sel darah merah hancur lebih cepat dari yang diproduksi. Bisa karena autoimun atau faktor keturunan.<br><br>5️⃣ <b>Anemia Sel Sabit (Sickle Cell)</b><br>Kelainan genetik — sel darah berbentuk bulan sabit, mudah tersumbat.<br><br>6️⃣ <b>Thalasemia</b><br>Kelainan genetik produksi hemoglobin. Umum di Asia Tenggara.<br><br>7️⃣ <b>Anemia pada Penyakit Kronis</b><br>Akibat infeksi kronis, penyakit ginjal, kanker, dll.<br><br><i>⚠️ 90% anemia pada remaja putri Indonesia adalah <b>Anemia Defisiensi Besi</b> yang bisa dicegah!</i>'
+  },
+  {
+    id: 'penyebab_anemia',
+    tags: ['penyebab anemia','kenapa anemia','mengapa anemia','sebab anemia','faktor anemia','faktor risiko anemia','anemia karena apa','penyebab utama anemia','yang menyebabkan anemia','pemicu anemia'],
+    answer: '🔍 <b>Penyebab Anemia pada Remaja Putri:</b><br><br>🔴 <b>1. Asupan Zat Besi Kurang</b><br>• Jarang makan daging, ikan, hati<br>• Pola makan vegetarian tanpa suplemen<br>• Diet ketat / melewatkan makan<br><br>🔴 <b>2. Kehilangan Darah</b><br>• Menstruasi — terutama jika banyak & lama<br>• Perdarahan saluran cerna (jarang)<br><br>🔴 <b>3. Penyerapan Zat Besi Buruk</b><br>• Terlalu banyak minum teh/kopi saat makan<br>• Konsumsi kalsium tinggi bersamaan<br>• Gangguan lambung (gastritis, celiac)<br><br>🔴 <b>4. Kebutuhan Meningkat</b><br>• Masa pertumbuhan remaja<br>• Kehamilan & menyusui<br>• Olahraga intensitas tinggi<br><br>🔴 <b>5. Kurang Vitamin B12 & Asam Folat</b><br>• Jarang makan sayuran hijau & produk hewani<br><br>🔴 <b>6. Faktor Genetik</b><br>• Thalasemia, anemia sel sabit<br><br>🔴 <b>7. Infeksi & Penyakit Kronis</b><br>• Cacingan, malaria, TBC, penyakit ginjal<br><br><i>💡 Remaja putri 5x lebih berisiko anemia dibanding remaja putra karena menstruasi bulanan!</i>'
+  },
+
+  // ── GEJALA ANEMIA ────────────────────────────────────────────
+  {
+    id: 'gejala_anemia',
+    tags: ['gejala anemia','tanda anemia','ciri anemia','tanda-tanda anemia','gejala-gejala anemia','apa saja gejala','ciri-ciri anemia','simtom anemia','keluhan anemia','gejala umum anemia','gejala khas anemia'],
+    answer: '😟 <b>Gejala Anemia yang Perlu Diwaspadai:</b><br><br>🔴 <b>Gejala 5L (Utama):</b><br>• <b>L</b>emah — tubuh tidak bertenaga<br>• <b>L</b>esu — malas beraktivitas<br>• <b>L</b>elah — mudah capek meski aktivitas ringan<br>• <b>L</b>unglai — badan terasa berat<br>• <b>L</b>alai — sulit fokus & konsentrasi<br><br>🔴 <b>Gejala Fisik Lainnya:</b><br>• Wajah, bibir, gusi, dan telapak tangan <b>pucat</b><br>• Kelopak mata bagian dalam pucat (putih, bukan merah muda)<br>• Pusing atau sakit kepala, terutama saat berdiri<br>• Jantung berdebar-debar (palpitasi)<br>• Sesak napas saat aktivitas ringan<br>• Kuku rapuh, mudah patah, atau berbentuk sendok (koilonikia)<br>• Lidah terasa sakit, bengkak, atau tampak pucat (glositis)<br>• Sudut mulut pecah-pecah (angular cheilitis)<br>• Rambut rontok berlebihan<br>• Telingga berdenging (tinnitus)<br>• Kaki & tangan sering dingin<br><br>⚠️ <b>Pada kondisi berat:</b><br>• Pingsan<br>• Nyeri dada<br>• Denyut jantung tidak teratur<br><br><i>💡 Cara mudah cek: tarik kelopak mata bawah ke bawah — jika bagian dalam merah muda cerah = normal; jika pucat/putih = kemungkinan anemia. Segera konfirmasi dengan cek Hb!</i>'
+  },
+  {
+    id: 'gejala_spesifik',
+    tags: ['pucat','pusing anemia','lelah terus','lemah badan','jantung berdebar','sesak napas anemia','kuku rapuh','lidah sakit','rambut rontok anemia','sakit kepala anemia','mudah capek','sering pusing','kelopak mata pucat','telapak tangan pucat'],
+    answer: '🔍 <b>Gejala Spesifik Anemia:</b><br><br>😮 <b>Pucat</b><br>Terjadi karena berkurangnya hemoglobin yang memberi warna merah. Cek di: wajah, bibir, gusi, telapak tangan, dan kelopak mata bagian dalam.<br><br>💫 <b>Pusing & Sakit Kepala</b><br>Otak kekurangan oksigen → pusing saat berdiri tiba-tiba (ortostatik), sakit kepala terus-menerus.<br><br>💓 <b>Jantung Berdebar (Palpitasi)</b><br>Jantung bekerja lebih keras untuk memompa darah yang kurang oksigen. Terasa debar kencang atau tidak teratur.<br><br>😮‍💨 <b>Sesak Napas</b><br>Napas jadi pendek-pendek bahkan saat istirahat atau aktivitas ringan seperti naik tangga.<br><br>💅 <b>Kuku Rapuh / Koilonikia</b><br>Kuku menjadi tipis, mudah patah, atau berbentuk cekung seperti sendok — tanda khas defisiensi besi berat.<br><br>👅 <b>Lidah Sakit (Glositis)</b><br>Lidah merah, bengkak, halus (tidak ada papil), terasa perih — khas anemia defisiensi B12/folat.<br><br><i>⚠️ Jika mengalami 3 gejala atau lebih, segera periksa Hb ke puskesmas ya!</i>'
+  },
+  {
+    id: 'cek_anemia_mandiri',
+    tags: ['cara cek anemia','cek anemia sendiri','tes anemia di rumah','deteksi anemia','cara tahu anemia','bagaimana cek anemia','apakah saya anemia','test anemia','kelopak mata','cek sendiri'],
+    answer: '🔬 <b>Cara Cek Anemia Mandiri (di Rumah):</b><br><br>👁️ <b>1. Tes Kelopak Mata</b><br>Tarik kelopak mata bawah ke bawah perlahan. Bagian dalam yang seharusnya merah muda cerah.<br>• Merah muda cerah = Normal ✅<br>• Pucat / putih = Kemungkinan anemia ⚠️<br><br>🖐️ <b>2. Cek Telapak Tangan</b><br>Rentangkan tangan, lihat warna telapak dan garis tangan.<br>• Merah muda = Normal ✅<br>• Pucat/keputihan = Kemungkinan anemia ⚠️<br><br>💅 <b>3. Cek Kuku</b><br>Tekan ujung kuku hingga putih, lepas. Warna merah muda seharusnya kembali dalam &lt; 2 detik.<br>• &lt; 2 detik = Normal ✅<br>• > 2 detik / tetap pucat = Kemungkinan anemia ⚠️<br><br>👄 <b>4. Cek Bibir & Gusi</b><br>Warna bibir dan gusi yang sehat adalah merah muda. Jika pucat, waspadai anemia.<br><br>⚠️ <b>Penting!</b> Tes mandiri ini <b>hanya sebagai indikasi awal</b>, bukan diagnosis. Tetap harus dipastikan dengan <b>cek Hb di puskesmas/klinik</b>.<br><br><i>💊 Cek Hb gratis dengan BPJS di Puskesmas terdekat!</i>'
+  },
+
+  // ── HEMOGLOBIN & LABORATORIUM ────────────────────────────────
+  {
+    id: 'hemoglobin',
+    tags: ['hemoglobin','hb','kadar hb','nilai hb','hb normal','hasil hb','hb rendah','hb tinggi','hb berapa','cek hb','hasil lab','darah lengkap','ferritin','transferin','serum iron','tibc','mch','mcv','mchc'],
+    answer: '🔬 <b>Panduan Hemoglobin (Hb) & Pemeriksaan Laboratorium:</b><br><br>📊 <b>Nilai Normal Hb:</b><br>• Remaja putri & wanita dewasa: <b>≥ 12 g/dL</b><br>• Ibu hamil: <b>≥ 11 g/dL</b><br>• Anak 5–11 tahun: <b>≥ 11,5 g/dL</b><br><br>📊 <b>Klasifikasi Anemia (WHO):</b><br>• <b>Ringan:</b> Hb 10–11,9 g/dL<br>• <b>Sedang:</b> Hb 8–9,9 g/dL<br>• <b>Berat:</b> Hb &lt; 8 g/dL<br><br>🧪 <b>Pemeriksaan Lengkap Anemia:</b><br>• <b>Hb</b> — kadar hemoglobin<br>• <b>Darah Lengkap (DL)</b> — MCV, MCH, MCHC (ukuran & warna sel darah)<br>• <b>Ferritin</b> — cadangan zat besi (normal: 12–150 ng/mL)<br>• <b>Serum Iron</b> — besi dalam darah (normal: 60–170 µg/dL)<br>• <b>TIBC</b> — kapasitas angkut besi (normal: 240–450 µg/dL)<br>• <b>Retikulosit</b> — sel darah merah muda<br><br>🏥 <b>Di mana cek?</b><br>• Puskesmas — <b>GRATIS dengan BPJS</b><br>• Klinik / Lab mandiri<br>• Alat Easy Touch / hemoglobinometer portable<br><br><i>💡 Disarankan cek Hb minimal <b>1x per 6 bulan</b> untuk remaja putri berisiko!</i>'
+  },
+
+  // ── NUTRISI & ZAT BESI ──────────────────────────────────────
+  {
+    id: 'makanan_zat_besi',
+    tags: ['makanan zat besi','sumber zat besi','makanan untuk anemia','nutrisi anemia','diet anemia','makan apa','makanan kaya besi','bahan makanan','hati ayam','daging','bayam','ikan','zat besi tinggi','makanan tinggi fe','fe makanan'],
+    answer: '🥗 <b>Makanan Kaya Zat Besi untuk Anemia:</b><br><br>🥩 <b>Zat Besi HEME (nabati — penyerapan 15–35%):</b><br>• <b>Hati sapi/ayam</b> — sumber terkaya (6–9 mg/100g)<br>• <b>Daging sapi</b> — 2,5–3 mg/100g<br>• <b>Daging kambing</b> — 2,5 mg/100g<br>• <b>Ikan tuna, sarden, kembung</b> — 1–2 mg/100g<br>• <b>Kerang, tiram</b> — hingga 7 mg/100g<br>• <b>Udang</b> — 1,5 mg/100g<br>• <b>Daging ayam bagian paha</b> — 1 mg/100g<br><br>🌿 <b>Zat Besi NON-HEME (nabati — penyerapan 2–20%):</b><br>• <b>Bayam, kangkung, daun singkong</b> — 2–3 mg/100g<br>• <b>Brokoli, daun katuk</b> — 1–2 mg/100g<br>• <b>Tempe</b> — 3–4 mg/100g<br>• <b>Tahu</b> — 1,5 mg/100g<br>• <b>Kacang merah, kacang hijau, edamame</b> — 2–3 mg/100g<br>• <b>Kacang tanah, almond</b> — 2 mg/100g<br>• <b>Biji labu, biji wijen</b> — 4–8 mg/100g<br>• <b>Kurma, kismis</b> — 1–2 mg/100g<br>• <b>Oat, quinoa</b> — 2–4 mg per porsi<br><br>🍊 <b>Wajib dikombinasikan dengan Vitamin C:</b><br>Konsumsi vitamin C <b>bersamaan</b> dengan makanan zat besi untuk meningkatkan penyerapan hingga <b>3–6x lipat!</b><br>• Jeruk, jambu biji, mangga, papaya<br>• Tomat, paprika merah/kuning<br>• Kiwi, stroberi<br><br><i>💡 Kebutuhan zat besi remaja putri: <b>15–18 mg per hari</b> (lebih tinggi saat menstruasi!)</i>'
+  },
+  {
+    id: 'penghambat_penyerapan',
+    tags: ['penghambat zat besi','yang menghambat','jangan dimakan bersamaan','teh kopi anemia','inhibitor besi','tanin','fitat','kalsium menghambat','susu anemia','coklat anemia','makanan yang dihindari anemia','pantangan anemia','makanan terlarang','jangan makan apa'],
+    answer: '🚫 <b>Makanan yang Menghambat Penyerapan Zat Besi:</b><br><br>☕ <b>1. Teh & Kopi</b><br>Mengandung <b>tanin dan polifenol</b> yang mengikat zat besi dan mencegah penyerapan hingga 60–80%!<br>→ Tunggu <b>1–2 jam</b> setelah makan baru boleh minum teh/kopi.<br><br>🥛 <b>2. Susu & Produk Kalsium Tinggi</b><br>Kalsium bersaing langsung dengan zat besi dalam penyerapan.<br>→ Jangan konsumsi susu, keju, yogurt <b>bersamaan</b> dengan makanan sumber besi atau TTD.<br><br>🌾 <b>3. Makanan Tinggi Fitat</b><br>Biji-bijian utuh, gandum, jagung, dan kacang-kacangan mentah mengandung <b>asam fitat</b> yang mengikat besi.<br>→ Rendam/rebus untuk mengurangi fitat.<br><br>🧀 <b>4. Makanan Tinggi Oksalat</b><br>Coklat, kopi, teh hitam, bayam mentah (oksalat tinggi).<br>→ Masak bayam terlebih dahulu untuk mengurangi oksalat.<br><br>💊 <b>5. Antasida & Obat Maag</b><br>Mengandung kalsium/magnesium yang menghambat penyerapan besi.<br>→ Pisahkan konsumsi dengan TTD minimal 2 jam.<br><br><i>✅ Tips terbaik: minum TTD atau makan sumber zat besi <b>bersama jus jeruk / vitamin C</b>, bukan teh!</i>'
+  },
+  {
+    id: 'vitamin_mineral_anemia',
+    tags: ['vitamin b12','asam folat','folat','vitamin c','vitamin d anemia','mineral anemia','suplemen anemia','vitamin untuk anemia','b12 anemia','folat anemia','asam folat anemia'],
+    answer: '💊 <b>Vitamin & Mineral Penting untuk Anemia:</b><br><br>🔴 <b>Zat Besi (Fe)</b><br>• Fungsi: membentuk hemoglobin<br>• Kebutuhan remaja putri: 15–18 mg/hari<br>• Sumber: hati, daging merah, bayam, tempe<br><br>🟡 <b>Vitamin B12 (Kobalamin)</b><br>• Fungsi: pematangan sel darah merah<br>• Kebutuhan: 2,4 µg/hari<br>• Sumber: daging, ikan, telur, susu, produk hewani<br>• Kekurangan: anemia megaloblastik, gangguan saraf<br><br>🟢 <b>Asam Folat (Vitamin B9)</b><br>• Fungsi: produksi DNA & sel darah merah baru<br>• Kebutuhan: 400 µg/hari (remaja)<br>• Sumber: sayuran hijau, kacang-kacangan, jeruk, alpukat<br>• Sangat penting untuk remaja & wanita usia subur!<br><br>🟠 <b>Vitamin C</b><br>• Fungsi: meningkatkan penyerapan zat besi non-heme hingga 6x<br>• Sumber: jeruk, jambu biji, tomat, paprika, kiwi<br><br>🔵 <b>Vitamin A</b><br>• Fungsi: mobilisasi besi dari cadangan tubuh<br>• Sumber: wortel, ubi jalar, bayam, mangga<br><br>⚪ <b>Tembaga (Cu) & Zinc (Zn)</b><br>• Membantu penyerapan dan penggunaan zat besi<br>• Sumber: kacang-kacangan, biji-bijian, seafood<br><br><i>💡 TTD sudah mengandung kombinasi zat besi + asam folat. Minum rutin ya!</i>'
+  },
+  {
+    id: 'contoh_menu',
+    tags: ['contoh menu','menu anemia','menu makan','menu sehari','sarapan anemia','makan siang anemia','makan malam anemia','resep anemia','menu harian','menu bergizi','apa yang dimakan','pola makan anemia'],
+    answer: '🍽️ <b>Contoh Menu Harian Anti-Anemia:</b><br><br>☀️ <b>Sarapan:</b><br>• Nasi + telur dadar + tumis bayam + segelas jus jeruk<br>• atau: Oatmeal + susu + buah-buahan segar + kismis<br><br>🍱 <b>Makan Siang:</b><br>• Nasi + hati ayam/sapi bumbu kecap + lalapan + sup kacang merah<br>• atau: Nasi + ikan sarden/tuna + tempe goreng + sayur asem<br><br>🌙 <b>Makan Malam:</b><br>• Nasi + daging sapi/kambing + tahu + tumis kangkung + jeruk sesudahnya<br>• atau: Nasi + ayam panggang + brokoli + salad dengan paprika<br><br>🍎 <b>Camilan Sehat:</b><br>• Edamame kukus<br>• Kurma + kacang almond<br>• Buah jambu biji / kiwi / stroberi<br>• Smoothie bayam + jeruk + pisang<br><br>☕ <b>Catatan Minuman:</b><br>• Hindari teh/kopi bersamaan dengan makan<br>• Perbanyak air putih (8 gelas/hari)<br>• Jus buah segar lebih baik dari minuman kemasan<br><br><i>💊 Jangan lupa minum TTD 1x/minggu setelah makan, dengan air putih atau jus jeruk!</i>'
+  },
+
+  // ── TABLET TAMBAH DARAH (TTD) ────────────────────────────────
+  {
+    id: 'ttd_umum',
+    tags: ['ttd','tablet tambah darah','tablet besi','fe tablet','suplemen besi','tablet fe','iron tablet','tablet iron','ttd itu apa','apa itu ttd','manfaat ttd'],
+    answer: '💊 <b>Tablet Tambah Darah (TTD)</b><br><br>TTD adalah suplemen yang mengandung:<br>• <b>Zat besi (Ferro Sulfat / Ferro Fumarat)</b> — 60 mg elemental iron<br>• <b>Asam Folat</b> — 0,4 mg (400 µg)<br><br>🎯 <b>Manfaat TTD:</b><br>• Mencegah & mengatasi anemia defisiensi besi<br>• Meningkatkan kadar Hb dalam darah<br>• Mendukung konsentrasi & prestasi belajar<br>• Mencegah kelelahan kronis<br>• Persiapan kehamilan sehat di masa depan<br><br>👩‍⚕️ <b>Siapa yang perlu minum TTD?</b><br>• Semua remaja putri usia 12–18 tahun<br>• Wanita usia subur (WUS) 15–49 tahun<br>• Ibu hamil (dosis berbeda: 1 tablet/hari)<br>• Wanita dengan hasil skrining risiko sedang-tinggi<br><br>🏥 <b>Di mana mendapatkan TTD?</b><br>• <b>Gratis</b> di Puskesmas & sekolah (program Kemenkes RI)<br>• Apotek (beli sendiri, terjangkau)<br>• Posyandu & bidan<br><br><i>✅ TTD aman dan sudah terbukti secara ilmiah menurunkan prevalensi anemia!</i>'
+  },
+  {
+    id: 'cara_minum_ttd',
+    tags: ['cara minum ttd','minum ttd yang benar','aturan ttd','jadwal ttd','dosis ttd','berapa ttd','kapan minum ttd','waktu minum ttd','ttd berapa kali','minum ttd sehari','minum ttd seminggu','petunjuk ttd'],
+    answer: '📋 <b>Cara Minum TTD yang Benar:</b><br><br>📅 <b>Jadwal & Dosis:</b><br>• Remaja putri sehat: <b>1 tablet per minggu</b><br>• Saat menstruasi: bisa <b>1 tablet setiap hari</b> selama masa haid<br>• Ibu hamil: <b>1 tablet setiap hari</b><br>• Pilih hari yang sama setiap minggu (contoh: selalu Senin)<br><br>🕐 <b>Waktu Terbaik:</b><br>• Boleh pagi, siang, atau malam<br>• <b>Malam hari sebelum tidur</b> → efek samping mual berkurang<br>• Minum <b>setelah makan</b> jika perut sensitif<br><br>🍹 <b>Diminum Dengan Apa:</b><br>✅ Air putih<br>✅ Jus jeruk / vitamin C → penyerapan terbaik!<br>❌ Teh / kopi → hambat penyerapan<br>❌ Susu → hambat penyerapan<br>❌ Antasida / obat maag → hambat penyerapan<br><br>⏱️ <b>Berapa Lama?</b><br>• Program pencegahan: selama masa remaja (rutin 1x/minggu)<br>• Pengobatan anemia: 3–6 bulan atau sesuai anjuran dokter<br>• Hb perlu dicek ulang setelah 3 bulan pengobatan<br><br><i>💡 Pasang alarm pengingat di HP agar tidak lupa minum TTD ya!</i>'
+  },
+  {
+    id: 'efek_samping_ttd',
+    tags: ['efek samping ttd','efek ttd','mual ttd','bab hitam','feses hitam','kotoran hitam','bab setelah ttd','sembelit ttd','mual setelah ttd','ttd bikin mual','perut sakit ttd','tidak enak ttd','ttd mengganggu','ttd berbahaya'],
+    answer: '⚠️ <b>Efek Samping TTD & Cara Mengatasinya:</b><br><br>😟 <b>Efek Samping Umum (Normal!):</b><br><br>💩 <b>BAB berwarna hitam/gelap</b><br>Ini NORMAL! Terjadi karena sisa zat besi yang tidak terserap keluar bersama feses. Tidak berbahaya.<br><br>🤢 <b>Mual & Tidak Nyaman di Perut</b><br>Terjadi terutama jika diminum saat perut kosong.<br>→ <b>Solusi:</b> Minum setelah makan / malam sebelum tidur<br><br>😣 <b>Sembelit / Susah BAB</b><br>Zat besi dapat memperlambat gerak usus.<br>→ <b>Solusi:</b> Perbanyak makan serat (sayur, buah), minum air putih 8 gelas/hari, olahraga ringan<br><br>🤮 <b>Heartburn / Rasa Terbakar di Dada</b><br>→ <b>Solusi:</b> Jangan langsung berbaring setelah minum TTD<br><br>😵 <b>Pusing Ringan</b><br>→ <b>Solusi:</b> Minum sambil duduk, jangan berdiri tiba-tiba<br><br>🚨 <b>Segera Hentikan & Hubungi Dokter jika:</b><br>• Diare berdarah<br>• Nyeri perut hebat<br>• Reaksi alergi (gatal, bengkak, sesak napas)<br>• Mual & muntah parah<br><br><i>💡 Sebagian besar efek samping ringan dan hilang setelah 1–2 minggu tubuh beradaptasi!</i>'
+  },
+  {
+    id: 'lupa_ttd',
+    tags: ['lupa minum ttd','ttd lupa','melewatkan ttd','skip ttd','lupa ttd hari ini','bagaimana jika lupa ttd','kalau lupa minum','ttd terlewat'],
+    answer: '😅 <b>Bagaimana Jika Lupa Minum TTD?</b><br><br>📅 <b>Jika Program 1x Seminggu:</b><br>• Lupa 1 hari → <b>minum segera</b> begitu ingat<br>• Lupa beberapa hari → <b>minum sekarang</b>, lanjutkan jadwal normal minggu depan<br>• <b>Jangan</b> minum 2 tablet sekaligus untuk "mengganti" yang terlewat<br><br>📅 <b>Jika Program 1x Sehari (ibu hamil/pengobatan):</b><br>• Lupa di hari itu → minum segera begitu ingat<br>• Sudah hampir waktunya dosis berikutnya → <b>skip</b> yang terlewat, lanjut dosis berikutnya<br>• <b>Jangan</b> minum dosis ganda<br><br>💡 <b>Tips Agar Tidak Lupa:</b><br>• Pasang alarm di HP setiap hari/minggu yang sama<br>• Simpan TTD di tempat yang terlihat (meja belajar, tas)<br>• Minta tolong orang tua/teman untuk mengingatkan<br>• Gunakan fitur pengingat di aplikasi IronTrack ini 📱<br><br><i>⚠️ TTD hanya efektif jika dikonsumsi <b>rutin dan konsisten</b>. Satu tablet yang terlewat tidak apa-apa, tapi jangan sampai sering terlewat ya!</i>'
+  },
+  {
+    id: 'penyimpanan_ttd',
+    tags: ['simpan ttd','penyimpanan ttd','ttd di simpan','cara simpan ttd','ttd expired','ttd kadaluarsa','ttd rusak','ttd kena sinar matahari'],
+    answer: '📦 <b>Cara Menyimpan TTD dengan Benar:</b><br><br>✅ <b>Tempat yang Benar:</b><br>• Simpan di tempat <b>sejuk dan kering</b> (suhu &lt;30°C)<br>• Jauh dari sinar matahari langsung<br>• Jauh dari jangkauan anak-anak<br>• Dalam wadah tertutup rapat<br><br>❌ <b>Hindari:</b><br>• Laci kamar mandi (lembap)<br>• Di dekat jendela yang terkena sinar matahari<br>• Di dalam mobil (suhu ekstrem)<br>• Lemari es (kecuali ada instruksi khusus)<br><br>⚠️ <b>Ciri TTD yang Sudah Rusak:</b><br>• Warna berubah (dari coklat menjadi hitam pekat atau kehijauan)<br>• Berbau tidak normal<br>• Hancur atau menggumpal basah<br>• Melewati tanggal kedaluwarsa<br><br><i>💡 Cek tanggal kedaluwarsa sebelum minum. TTD yang sudah rusak sebaiknya tidak dikonsumsi!</i>'
+  },
+
+  // ── MENSTRUASI (HAID) ─────────────────────────────────────────
+  {
+    id: 'menstruasi_umum',
+    tags: ['menstruasi','haid','datang bulan','menstruasi itu apa','apa itu menstruasi','siklus haid','siklus menstruasi','periode haid','mens','menstruasi normal','haid normal'],
+    answer: '📅 <b>Menstruasi (Haid) — Panduan Lengkap:</b><br><br>🩸 <b>Apa itu Menstruasi?</b><br>Menstruasi adalah proses peluruhan lapisan rahim (endometrium) yang terjadi setiap bulan jika sel telur tidak dibuahi. Ini adalah proses alami dan normal pada wanita usia subur.<br><br>📏 <b>Siklus Normal:</b><br>• Panjang siklus: <b>21–35 hari</b> (dihitung dari hari pertama haid ke hari pertama haid berikutnya)<br>• Rata-rata: <b>28 hari</b><br>• Durasi haid: <b>2–7 hari</b><br>• Jumlah darah: <b>30–80 mL per siklus</b> (sekitar 4–6 pembalut/hari)<br><br>🔄 <b>Fase Siklus Menstruasi:</b><br>• <b>Fase Haid</b> (hari 1–7): peluruhan endometrium<br>• <b>Fase Folikuler</b> (hari 1–13): folikel berkembang<br>• <b>Ovulasi</b> (hari 14): sel telur dilepas<br>• <b>Fase Luteal</b> (hari 15–28): persiapan implantasi<br><br>💡 <b>Tips:</b> Catat siklus haid di fitur <b>Siklus</b> di aplikasi ini untuk memantau regularitasnya!<br><br><i>⚠️ Haid yang tidak teratur, terlalu banyak, atau disertai nyeri hebat perlu dikonsultasikan ke dokter.</i>'
+  },
+  {
+    id: 'anemia_menstruasi',
+    tags: ['anemia saat haid','anemia karena menstruasi','menstruasi dan anemia','hubungan haid anemia','haid banyak anemia','darah haid','kehilangan darah','menstruasi menyebabkan anemia','haid bikin anemia'],
+    answer: '🩸 <b>Hubungan Menstruasi & Anemia:</b><br><br>Setiap siklus menstruasi, wanita kehilangan <b>20–80 mL darah</b>, mengandung sekitar <b>10–30 mg zat besi</b>. Inilah mengapa remaja putri <b>5x lebih rentan anemia</b> dibanding remaja putra!<br><br>📊 <b>Risiko Anemia Meningkat Jika:</b><br>• Volume darah haid > 80 mL per siklus (menorrhagia)<br>• Durasi haid > 7 hari<br>• Siklus haid lebih sering (&lt;21 hari)<br>• Asupan zat besi harian kurang dari 15 mg<br>• Tidak rutin minum TTD<br><br>💪 <b>Cara Mencegah Anemia saat Haid:</b><br>1. Minum TTD setiap hari selama masa haid<br>2. Perbanyak makan sumber zat besi (hati, daging, bayam)<br>3. Konsumsi vitamin C bersamaan<br>4. Istirahat cukup<br>5. Hindari teh/kopi saat makan<br><br>📱 <b>Pantau Haid di Aplikasi Ini:</b><br>Gunakan fitur <b>Siklus</b> untuk mencatat tanggal haid, volume, dan gejala. Data ini membantu dokter jika kamu perlu konsultasi.<br><br><i>💊 Kadar Hb biasanya turun 1–2 g/dL selama & setelah haid. Makanya TTD sangat penting!</i>'
+  },
+  {
+    id: 'haid_banyak',
+    tags: ['haid banyak','menstruasi banyak','darah haid banyak','pembalut banyak','menorrhagia','haid berlebihan','ganti pembalut','haid lebih dari seminggu','haid lama','haid tidak berhenti','perdarahan haid','haid terus menerus','flooding','ganti pembalut 1 jam'],
+    answer: '🚨 <b>Haid Terlalu Banyak (Menorrhagia):</b><br><br>⚠️ <b>Tanda Haid Abnormal/Terlalu Banyak:</b><br>• Harus ganti pembalut setiap <b>1–2 jam</b><br>• Durasi haid &gt; <b>7 hari</b><br>• Keluar <b>gumpalan darah</b> sebesar uang koin atau lebih<br>• Haid sangat banyak hingga tembus ke pakaian/kasur<br>• Merasa sangat lemas, pusing, sesak selama haid<br><br>🔍 <b>Kemungkinan Penyebab Medis:</b><br>• <b>Fibroid rahim</b> (benjolan jinak di rahim)<br>• <b>Polip rahim</b><br>• <b>Adenomiosis</b><br>• <b>PCOS</b> (sindrom ovarium polikistik)<br>• <b>Gangguan pembekuan darah</b><br>• <b>Efek IUD</b> (spiral)<br>• Ketidakseimbangan hormon<br><br>💡 <b>Yang Harus Dilakukan:</b><br>1. Catat berapa pembalut yang dipakai per hari<br>2. Dokumentasikan warna dan gumpalan<br>3. Cek Hb ke puskesmas<br>4. <b>Konsultasikan ke dokter kandungan!</b><br><br><i>🚨 Jika pusing berat, hampir pingsan, atau sesak napas selama haid — segera ke IGD!</i>'
+  },
+  {
+    id: 'haid_tidak_teratur',
+    tags: ['haid tidak teratur','siklus tidak teratur','haid telat','telat haid','haid tidak datang','haid jarang','haid sering','siklus pendek','siklus panjang','amenore','oligomenore','haid sebulan dua kali','haid setahun sekali'],
+    answer: '📅 <b>Haid Tidak Teratur — Apa yang Normal & Tidak Normal:</b><br><br>✅ <b>Masih Normal:</b><br>• Siklus 21–35 hari (variasi per orang)<br>• Tidak teratur di 1–2 tahun pertama setelah haid pertama<br>• Berubah karena stres, perubahan berat badan, olahraga intensif<br><br>⚠️ <b>Perlu Diperhatikan:</b><br>• <b>Amenore primer</b>: belum haid sama sekali di usia >16 tahun<br>• <b>Amenore sekunder</b>: pernah haid tapi berhenti >3 bulan (bukan karena hamil)<br>• <b>Oligomenore</b>: haid hanya 4–9x per tahun<br>• <b>Polimenorea</b>: haid lebih dari 1x dalam 21 hari<br><br>🔍 <b>Penyebab Umum Haid Tidak Teratur:</b><br>• Stres berlebihan<br>• Berat badan sangat kurang/lebih (BMI ekstrem)<br>• Olahraga berlebihan<br>• PCOS<br>• Gangguan tiroid<br>• Anemia berat<br>• Kehamilan (selalu periksa jika aktif secara seksual)<br><br><i>💊 Anemia berat bisa menyebabkan haid tidak teratur. Sebaliknya, haid tidak teratur bisa memperparah anemia. Konsultasikan ke dokter ya!</i>'
+  },
+  {
+    id: 'nyeri_haid',
+    tags: ['nyeri haid','sakit haid','kram perut haid','dismenore','dysmenorrhea','haid sakit','perut sakit saat haid','nyeri menstruasi','haid menyakitkan','kram saat haid','nyeri perut haid','haid nyeri banget','sakit perut menstruasi'],
+    answer: '😣 <b>Nyeri Haid (Dismenore) — Panduan Lengkap:</b><br><br>📚 <b>Jenis Dismenore:</b><br><br>1️⃣ <b>Dismenore Primer</b> (paling umum)<br>• Nyeri tanpa penyebab medis yang jelas<br>• Disebabkan prostaglandin menyebabkan kontraksi rahim<br>• Biasanya mulai hari 1–2 haid<br>• Nyeri di perut bawah, bisa menjalar ke pinggang & paha<br><br>2️⃣ <b>Dismenore Sekunder</b><br>• Ada penyebab medis (endometriosis, fibroid, PCOS, radang panggul)<br>• Nyeri lebih berat & memanjang<br>• Perlu penanganan medis khusus<br><br>💊 <b>Cara Mengurangi Nyeri Haid:</b><br>• Kompres hangat di perut bawah<br>• Olahraga ringan (jalan, yoga, peregangan)<br>• Minum air hangat / jahe hangat<br>• Ibuprofen/asam mefenamat (sesuai dosis, bukan kebiasaan)<br>• Istirahat cukup<br>• Kurangi garam, kafein, dan gula saat menjelang haid<br><br>🚨 <b>Segera ke Dokter jika:</b><br>• Nyeri sangat berat hingga tidak bisa beraktivitas<br>• Tidak membaik dengan obat pereda nyeri biasa<br>• Disertai demam, mual/muntah<br>• Nyeri saat buang air atau berhubungan seksual<br><br><i>⚠️ Anemia memperburuk nyeri haid! Pastikan kadar Hb-mu normal ya.</i>'
+  },
+  {
+    id: 'pms',
+    tags: ['pms','premenstrual syndrome','sindrom pramenstruasi','sebelum haid','menjelang haid','mood haid','emosi sebelum haid','perut kembung haid','payudara nyeri haid','jerawat haid','pmdd','gejala sebelum haid'],
+    answer: '😤 <b>PMS (Premenstrual Syndrome) — Sindrom Pramenstruasi:</b><br><br>PMS adalah kumpulan gejala fisik dan emosional yang muncul <b>7–14 hari sebelum haid</b> dan biasanya mereda setelah haid datang.<br><br>😢 <b>Gejala Emosional:</b><br>• Mudah marah / sensitif<br>• Sedih atau menangis tanpa sebab jelas<br>• Cemas berlebihan<br>• Sulit konsentrasi<br>• Perubahan nafsu makan<br>• Insomnia atau terlalu banyak tidur<br><br>😣 <b>Gejala Fisik:</b><br>• Kembung / perut terasa penuh<br>• Payudara nyeri atau bengkak<br>• Sakit kepala<br>• Jerawat muncul<br>• Kelelahan ekstrem<br>• Nyeri punggung bawah<br>• Tangan & kaki bengkak<br><br>💊 <b>Cara Mengatasi PMS:</b><br>• Kurangi garam (mengurangi retensi air/kembung)<br>• Kurangi kafein dan gula<br>• Olahraga teratur (melepas endorfin)<br>• Tidur cukup (7–9 jam)<br>• Konsumsi kalsium & magnesium<br>• Kelola stres (meditasi, journaling)<br><br><i>⚠️ Jika PMS sangat mengganggu aktivitas, bisa jadi PMDD (PMS berat). Konsultasikan ke dokter ya!</i>'
+  },
+  {
+    id: 'haid_pertama',
+    tags: ['haid pertama','menstruasi pertama','menarche','menarke','baru pertama haid','kapan haid pertama','usia haid pertama','anak belum haid','remaja haid'],
+    answer: '🌸 <b>Haid Pertama (Menarche):</b><br><br>📏 <b>Usia Normal Haid Pertama:</b><br>• Rentang normal: <b>10–15 tahun</b><br>• Rata-rata: <b>12–13 tahun</b><br>• Biasanya terjadi 2–3 tahun setelah payudara mulai berkembang<br><br>⚠️ <b>Perlu Perhatian Jika:</b><br>• Belum haid di usia > 15–16 tahun (amenore primer)<br>• Haid datang sebelum usia 9 tahun (pubertas dini)<br><br>💡 <b>Yang Normal di Tahun-tahun Pertama:</b><br>• Siklus tidak teratur (normal hingga 2 tahun)<br>• Volume dan durasi bervariasi<br>• Nyeri ringan adalah normal<br><br>🩸 <b>Risiko Anemia pada Haid Pertama:</b><br>Tubuh belum terbiasa kehilangan darah rutin. Cadangan zat besi remaja putri umumnya sudah rendah, sehingga haid pertama bisa langsung memicu atau memperburuk anemia.<br><br><b>Rekomendasi:</b><br>• Mulai minum TTD sejak haid pertama datang<br>• Perbanyak makan sumber zat besi<br>• Cek Hb ke puskesmas 3 bulan setelah haid pertama<br><br><i>💪 Haid adalah tanda kamu sehat dan tumbuh normal. Yuk jaga dengan gizi yang baik!</i>'
+  },
+  {
+    id: 'haid_berhenti',
+    tags: ['haid berhenti','tidak haid','haid hilang','amenore','menstruasi berhenti','tidak datang bulan','haid tidak keluar','lama tidak haid','sudah tidak haid','haid berapa bulan'],
+    answer: '⚠️ <b>Haid Terhenti (Amenore) — Kapan Perlu Dikhawatirkan?</b><br><br>📚 <b>Jenis Amenore:</b><br><br>🔴 <b>Amenore Primer</b><br>Belum pernah haid sama sekali di usia ≥ 15–16 tahun. Perlu evaluasi medis segera.<br><br>🔴 <b>Amenore Sekunder</b><br>Pernah haid tapi berhenti selama ≥ 3 bulan berturut-turut (bukan karena hamil).<br><br>🔍 <b>Penyebab Umum:</b><br>• Kehamilan — <b>periksa kehamilan terlebih dahulu!</b><br>• Stres berat<br>• Berat badan sangat rendah / gangguan makan (anoreksia)<br>• Olahraga ekstrem (female athlete triad)<br>• PCOS<br>• Gangguan tiroid<br>• Anemia berat<br>• Efek KB hormonal<br>• Menopause dini<br><br>💊 <b>Hubungan dengan Anemia:</b><br>Anemia berat dapat menyebabkan tubuh "mematikan" fungsi reproduksi sebagai mekanisme proteksi. Sebaliknya, amenore dari penyebab lain bisa menyebabkan penumpukan darah.<br><br><i>🏥 Amenore sekunder > 3 bulan HARUS dikonsultasikan ke dokter kandungan. Jangan tunda!</i>'
+  },
+  {
+    id: 'pcos',
+    tags: ['pcos','sindrom ovarium polikistik','polycystic ovary syndrome','ovarium polikistik','kista ovarium','ovarium kista','pcos dan anemia','haid tidak teratur pcos','pcos itu apa'],
+    answer: '🔬 <b>PCOS (Sindrom Ovarium Polikistik):</b><br><br>PCOS adalah gangguan hormonal umum yang mempengaruhi ovarium, menyebabkan ketidakseimbangan hormon reproduksi.<br><br>📊 <b>Prevalensi:</b> 5–10% wanita usia reproduksi. Salah satu penyebab terbanyak infertilitas.<br><br>🔍 <b>Tanda & Gejala PCOS:</b><br>• Siklus haid tidak teratur atau sangat jarang<br>• Haid sangat banyak ketika datang<br>• Rambut tubuh/wajah berlebihan (hirsutisme)<br>• Jerawat parah, kulit berminyak<br>• Rambut kepala rontok<br>• Berat badan sulit turun, terutama di perut<br>• Kulit menggelap di lipatan (acanthosis nigricans)<br><br>⚠️ <b>Hubungan PCOS dengan Anemia:</b><br>• Haid tidak teratur → kadang sangat banyak ketika datang → perdarahan berlebih → anemia<br>• Haid sangat jarang → tidak ada anemia dari perdarahan, tapi hormon tidak seimbang<br><br>🏥 <b>Penanganan:</b><br>PCOS tidak bisa disembuhkan total, tapi bisa dikontrol dengan:<br>• Pola hidup sehat & penurunan berat badan (jika kelebihan)<br>• Obat hormonal (sesuai resep dokter)<br>• Pemantauan rutin<br><br><i>⚠️ Diagnosis PCOS hanya oleh dokter dengan USG dan pemeriksaan hormon. Segera konsultasi jika curiga PCOS!</i>'
+  },
+  {
+    id: 'endometriosis',
+    tags: ['endometriosis','endometriosis itu apa','endo','nyeri haid berat','nyeri panggul','sakit saat berhubungan','endometrioma','endometriosis dan anemia'],
+    answer: '🔬 <b>Endometriosis:</b><br><br>Endometriosis adalah kondisi di mana jaringan yang mirip lapisan rahim (endometrium) tumbuh di luar rahim — di ovarium, tuba falopi, atau area panggul lainnya.<br><br>😣 <b>Gejala Endometriosis:</b><br>• Nyeri haid yang <b>sangat hebat</b> (dismenore berat)<br>• Nyeri panggul yang tidak hanya saat haid<br>• Nyeri saat buang air besar/kecil selama haid<br>• Haid sangat banyak (menorrhagia)<br>• Kelelahan ekstrem<br>• Kesulitan hamil<br><br>⚠️ <b>Hubungan dengan Anemia:</b><br>Haid yang banyak dan berkepanjangan pada endometriosis sangat berisiko menyebabkan <b>anemia defisiensi besi berat</b>. Banyak penderita endometriosis mengalami Hb di bawah 10 g/dL.<br><br>🏥 <b>Penanganan:</b><br>• Diagnosis: laparoskopi (operasi kecil)<br>• Pengobatan: obat hormonal, pereda nyeri, hingga operasi<br>• Manajemen anemia: suplemen zat besi intensif, bahkan transfusi pada kasus berat<br><br><i>⚠️ Endometriosis sering terdiagnosis terlambat (rata-rata 7–10 tahun). Jika nyeri haid sangat berat dan mengganggu — jangan anggap normal, segera konsultasi ke dokter kandungan!</i>'
+  },
+  {
+    id: 'warna_darah_haid',
+    tags: ['warna darah haid','warna menstruasi','darah haid merah','darah haid hitam','darah haid coklat','darah haid pink','darah haid ungu','arti warna darah haid','darah haid gelap','darah haid terang'],
+    answer: '🩸 <b>Arti Warna Darah Haid:</b><br><br>🔴 <b>Merah Cerah</b><br>Normal! Darah segar dari perdarahan aktif. Biasanya di hari 1–2 haid.<br><br>🟤 <b>Merah Gelap / Coklat Tua</b><br>Normal! Darah yang sudah lebih lama di rahim sebelum keluar. Sering di awal atau akhir haid.<br><br>⚫ <b>Hitam</b><br>Umumnya normal jika di awal/akhir haid — darah sangat tua. Waspadai jika disertai bau tidak sedap atau berlangsung lama.<br><br>🩷 <b>Pink / Merah Muda</b><br>Normal di awal/akhir haid — darah encer bercampur cairan serviks. Jika banyak & di luar haid, bisa tanda hormon estrogen rendah.<br><br>🟣 <b>Ungu / Biru Keunguan</b><br>Bisa tanda kadar estrogen tinggi. Perlu diperhatikan jika konsisten.<br><br>🟠 <b>Oranye</b><br>Bisa tanda infeksi (bercampur cairan serviks terinfeksi). Segera periksa ke dokter, terutama jika berbau.<br><br>🔵 <b>Abu-abu</b><br>Tidak normal. Bisa tanda infeksi serius atau keguguran. Segera ke dokter!<br><br><i>⚠️ Perubahan warna yang signifikan dan terus-menerus, apalagi disertai bau tidak sedap atau nyeri — konsultasikan ke dokter ya!</i>'
+  },
+
+  // ── PENCEGAHAN & GAYA HIDUP ──────────────────────────────────
+  {
+    id: 'pencegahan_anemia',
+    tags: ['pencegahan anemia','cegah anemia','mencegah anemia','tips anemia','cara mencegah','agar tidak anemia','supaya tidak anemia','strategi anemia','antisipasi anemia'],
+    answer: '💪 <b>Cara Mencegah Anemia Secara Komprehensif:</b><br><br>🥗 <b>1. Pola Makan:</b><br>• Makan sumber zat besi setiap hari (hati, daging, ikan, bayam, tempe)<br>• Selalu kombinasikan dengan vitamin C (jeruk, tomat, paprika)<br>• Hindari teh/kopi 1–2 jam sebelum dan sesudah makan<br>• Variasikan menu agar tidak bosan<br><br>💊 <b>2. Suplemen Rutin:</b><br>• Minum TTD <b>1x per minggu</b> tanpa terlewat<br>• Saat haid: TTD setiap hari<br>• Catat di kalender atau pakai pengingat di HP<br><br>🏃‍♀️ <b>3. Gaya Hidup:</b><br>• Olahraga teratur 30 menit/hari (tidak berlebihan)<br>• Tidur cukup 7–9 jam per malam<br>• Kelola stres (yoga, meditasi, hobi)<br>• Tidak merokok / menghirup asap rokok<br><br>🔍 <b>4. Pemantauan Kesehatan:</b><br>• Cek Hb minimal 2x per tahun (tiap 6 bulan)<br>• Gunakan fitur skrining di IronTrack ini 📱<br>• Catat siklus haid secara rutin<br>• Rutin ke posyandu remaja atau puskesmas<br><br>🪱 <b>5. Kebersihan & Infeksi:</b><br>• Cuci tangan sebelum makan (cegah cacingan)<br>• Minum air matang<br>• Pakai alas kaki di tanah<br>• Obati infeksi segera<br><br><i>🌟 Pencegahan anemia dimulai dari kebiasaan kecil sehari-hari! Konsisten adalah kunci.</i>'
+  },
+  {
+    id: 'olahraga_anemia',
+    tags: ['olahraga anemia','boleh olahraga','olahraga saat anemia','olahraga haid','olahraga menstruasi','aktivitas fisik anemia','gym anemia','lari anemia','renang anemia','sepeda anemia'],
+    answer: '🏃‍♀️ <b>Olahraga & Anemia — Panduan Lengkap:</b><br><br>✅ <b>Boleh Olahraga saat Anemia Ringan-Sedang:</b><br>• Jalan santai 20–30 menit<br>• Yoga atau peregangan (stretching)<br>• Bersepeda santai<br>• Renang dengan intensitas ringan<br>• Senam aerobik ringan<br><br>❌ <b>Hindari saat Anemia Berat (Hb &lt;8):</b><br>• Olahraga intensitas tinggi (lari cepat, HIIT, angkat beban berat)<br>• Olahraga kompetitif<br>• Olahraga yang memerlukan kecepatan & kekuatan penuh<br><br>🏃‍♀️ <b>Olahraga saat Menstruasi:</b><br>• Hari 1–2 (paling banyak): olahraga ringan atau istirahat<br>• Hari 3–7: boleh olahraga normal jika tidak terlalu nyeri<br>• Olahraga justru membantu mengurangi nyeri haid (melepas endorfin!)<br><br>⚠️ <b>Waspada Anemia akibat Olahraga Berlebihan:</b><br>• "Sports anemia" — terjadi pada atlet yang berlatih sangat keras<br>• Sel darah merah rusak akibat benturan berulang (hemolisis)<br>• Atlet wanita perlu cek Hb rutin!<br><br><i>💡 Olahraga ringan teratur justru membantu sirkulasi darah dan oksigenasi tubuh saat anemia. Mulai dari yang ringan dulu ya!</i>'
+  },
+  {
+    id: 'istirahat_anemia',
+    tags: ['tidur anemia','istirahat anemia','kurang tidur anemia','tidur berapa jam','istirahat yang cukup','tidur siang anemia','stamina anemia','energi anemia'],
+    answer: '😴 <b>Istirahat & Anemia:</b><br><br>💤 <b>Kebutuhan Tidur Remaja:</b><br>Remaja (13–18 tahun) membutuhkan <b>8–10 jam</b> tidur per malam.<br><br>🩸 <b>Hubungan Tidur & Anemia:</b><br>• Saat tidur, tubuh memproduksi sel darah merah baru<br>• Kurang tidur → produksi sel darah tidak optimal<br>• Anemia menyebabkan kelelahan → sulit tidur berkualitas (lingkaran setan)<br><br>💡 <b>Tips Tidur Berkualitas dengan Anemia:</b><br>• Tidur di jam yang sama setiap malam<br>• Kamar gelap, sejuk, dan tenang<br>• Hindari HP/layar 1 jam sebelum tidur<br>• Minum susu hangat (tapi tidak bersamaan dengan TTD!)<br>• Jangan minum kafein setelah jam 14.00<br><br>⚡ <b>Meningkatkan Energi saat Anemia:</b><br>• Tidur siang 20–30 menit jika merasa lelah berat<br>• Istirahat sebentar di antara aktivitas<br>• Jangan memaksakan diri saat Hb sangat rendah<br>• Konsumsi makanan bergizi sebelum aktivitas<br><br><i>💪 Istirahat cukup + nutrisi baik + TTD rutin = tubuh pulih lebih cepat dari anemia!</i>'
+  },
+  {
+    id: 'stres_anemia',
+    tags: ['stres anemia','stres dan haid','stres haid terlambat','stres mempengaruhi haid','stres memperburuk anemia','stres menstruasi','mental anemia','kesehatan mental anemia','kecemasan anemia'],
+    answer: '🧠 <b>Stres & Pengaruhnya pada Anemia dan Menstruasi:</b><br><br>🔗 <b>Bagaimana Stres Mempengaruhi Haid?</b><br>Stres → hormon kortisol naik → mengganggu produksi estrogen & progesteron → siklus haid kacau<br>• Haid bisa terlambat, lebih cepat, atau bahkan berhenti<br>• Nyeri haid menjadi lebih berat<br>• PMS memburuk<br><br>🔗 <b>Bagaimana Stres Mempengaruhi Anemia?</b><br>• Stres kronis → peradangan → mengganggu penyerapan & penggunaan zat besi<br>• Stres → pola makan buruk → asupan zat besi berkurang<br>• Stres → tidur buruk → pemulihan sel darah terhambat<br><br>💆‍♀️ <b>Cara Mengelola Stres:</b><br>• Meditasi 10–15 menit per hari<br>• Journaling / menulis perasaan<br>• Berbicara dengan orang yang dipercaya<br>• Hobi yang menyenangkan<br>• Olahraga ringan (yoga, jalan)<br>• Batasi media sosial<br>• Tidur cukup<br><br><i>🌟 Kesehatan mental & fisik saling mempengaruhi. Jaga keduanya ya!</i>'
+  },
+
+  // ── PENGOBATAN & MEDIS ────────────────────────────────────────
+  {
+    id: 'pengobatan_anemia',
+    tags: ['pengobatan anemia','obat anemia','terapi anemia','cara mengobati anemia','cara sembuh anemia','anemia bisa sembuh','pemulihan anemia','menyembuhkan anemia','sembuh dari anemia','berapa lama sembuh'],
+    answer: '💊 <b>Pengobatan Anemia Defisiensi Besi:</b><br><br>🩺 <b>1. Suplemen Zat Besi (Utama)</b><br>• Dosis pengobatan: <b>3–6 mg/kg/hari</b> (diberikan dokter)<br>• Diminum 1–3x sehari tergantung derajat anemia<br>• Durasi: minimal <b>3 bulan</b> setelah Hb normal (untuk isi cadangan)<br>• Jenis: ferro sulfat, ferro fumarat, ferro glukonat<br><br>📈 <b>Target Perbaikan:</b><br>• Hb mulai naik dalam <b>2–4 minggu</b><br>• Hb normal dalam <b>6–8 minggu</b><br>• Cadangan besi terisi penuh: 3–6 bulan<br><br>🔄 <b>2. Perbaikan Pola Makan</b><br>Suplemen saja tidak cukup tanpa perbaikan asupan makanan sehari-hari.<br><br>🏥 <b>3. Atasi Penyebab Dasar</b><br>• Haid berlebihan → terapi hormonal / prosedur medis<br>• Cacingan → obat cacing<br>• Infeksi kronis → terapi infeksi<br>• Gangguan penyerapan → pengobatan spesifik<br><br>🩸 <b>4. Transfusi Darah</b><br>Hanya untuk anemia berat (Hb &lt;7–8) dengan gejala berat atau sebelum operasi.<br><br>⏱️ <b>Berapa Lama Sembuh?</b><br>Dengan pengobatan tepat: <b>1–3 bulan</b> untuk Hb normal, 3–6 bulan untuk simpanan besi penuh.<br><br><i>⚠️ Dosis dan durasi pengobatan ditentukan dokter berdasarkan hasil lab. Jangan self-diagnose!</i>'
+  },
+  {
+    id: 'kapan_dokter',
+    tags: ['kapan ke dokter','perlu ke dokter','harus ke dokter','kapan periksa','tanda darurat anemia','gejala darurat','emergency anemia','kapan ke ugd','ke puskesmas','kapan ke rumah sakit','tanda bahaya'],
+    answer: '🏥 <b>Kapan Harus ke Dokter / Puskesmas?</b><br><br>🚨 <b>SEGERA ke IGD jika mengalami:</b><br>• Pingsan atau hampir pingsan<br>• Sesak napas berat saat istirahat<br>• Jantung berdebar sangat kencang atau tidak teratur<br>• Nyeri dada<br>• Wajah & bibir sangat pucat mendadak<br>• Haid sangat banyak tidak berhenti (ganti pembalut tiap jam)<br><br>⚠️ <b>Segera Buat Janji Dokter jika:</b><br>• Lelah berat yang tidak membaik > 2 minggu<br>• Pusing sering dan mengganggu aktivitas<br>• Haid sangat banyak tiap bulan<br>• Siklus haid sangat tidak teratur > 3 bulan<br>• Nyeri haid sangat berat tidak teratasi obat biasa<br>• Sudah minum TTD 1 bulan tapi tidak ada perbaikan<br>• Hasil skrining menunjukkan risiko tinggi<br><br>📋 <b>Pemeriksaan yang Akan Dilakukan:</b><br>• Pemeriksaan fisik (pucat, tanda vital)<br>• Cek Hb / Darah lengkap<br>• Ferritin & serum iron (jika perlu)<br>• USG (jika ada masalah rahim)<br><br><i>💚 Puskesmas melayani GRATIS dengan BPJS. Jangan tunda kalau kondisimu memburuk!</i>'
+  },
+  {
+    id: 'transfusi',
+    tags: ['transfusi darah','perlu transfusi','transfusi anemia','harus transfusi','kapan transfusi','golongan darah','donor darah','transfusi itu apa'],
+    answer: '🩸 <b>Transfusi Darah pada Anemia:</b><br><br>❓ <b>Kapan Diperlukan?</b><br>Transfusi darah bukan pengobatan utama anemia defisiensi besi. Dilakukan hanya jika:<br>• Hb sangat rendah (&lt;7 g/dL) dengan gejala berat<br>• Hb 7–8 g/dL dengan kondisi gagal jantung, infeksi berat, atau sesak napas<br>• Persiapan operasi dengan Hb rendah<br>• Anemia akibat perdarahan masif (kecelakaan, operasi)<br><br>⚠️ <b>Risiko Transfusi:</b><br>• Reaksi alergi<br>• Transmisi infeksi (sangat jarang dengan skrining ketat)<br>• Kelebihan cairan<br>• Tidak mengatasi penyebab dasar anemia<br><br>✅ <b>Prosedur Aman:</b><br>• Dilakukan di RS dengan pengawasan medis<br>• Darah diuji kecocokan golongan darah<br>• Dipantau selama dan sesudah transfusi<br><br><i>💡 Untuk anemia defisiensi besi, pengobatan dengan suplemen zat besi oral jauh lebih aman dan efektif dibanding transfusi. Transfusi hanya untuk kondisi darurat!</i>'
+  },
+
+  // ── ANEMIA & KONDISI KHUSUS ───────────────────────────────────
+  {
+    id: 'anemia_remaja',
+    tags: ['anemia remaja','anemia pada remaja','anemia anak sma','anemia siswa','anemia pelajar','anemia remaja putri','risiko remaja','prevalensi anemia remaja'],
+    answer: '🎓 <b>Anemia pada Remaja Putri — Fakta Penting:</b><br><br>📊 <b>Data Indonesia (Kemenkes 2023):</b><br>• <b>32,4%</b> remaja putri usia 15–24 tahun mengalami anemia<br>• Artinya <b>1 dari 3 remaja putri</b> anemia!<br>• Lebih tinggi di daerah pedesaan & keluarga kurang mampu<br><br>😟 <b>Dampak Anemia pada Remaja:</b><br>• <b>Prestasi belajar menurun</b> — sulit konsentrasi, nilai jelek<br>• <b>Produktivitas rendah</b> — cepat lelah, malas<br>• <b>Kekebalan tubuh lemah</b> — mudah sakit<br>• <b>Pertumbuhan terhambat</b><br>• <b>Risiko kehamilan bermasalah</b> di masa depan<br>• <b>Gangguan mood</b> — mudah marah, sedih<br><br>🎯 <b>Mengapa Remaja Putri Lebih Rentan?</b><br>• Menstruasi bulanan → kehilangan zat besi rutin<br>• Masa pertumbuhan → kebutuhan zat besi tinggi<br>• Pola makan remaja sering tidak seimbang<br>• Diet berlebihan / tidak makan pagi<br>• Kurang pengetahuan tentang gizi<br><br>💊 <b>Program Pemerintah:</b><br>• TTD gratis di sekolah dan puskesmas<br>• Pemeriksaan Hb di posyandu remaja<br>• Edukasi gizi di sekolah<br><br><i>💪 Kamu sudah ambil langkah tepat dengan menggunakan IronTrack! Yuk ajak teman-temanmu juga!</i>'
+  },
+  {
+    id: 'anemia_kehamilan',
+    tags: ['anemia ibu hamil','anemia hamil','anemia saat hamil','hamil anemia','anemia kehamilan','ttd hamil','tablet fe hamil','bahaya anemia hamil'],
+    answer: '🤱 <b>Anemia pada Kehamilan:</b><br><br>📊 <b>Prevalensi:</b> 48% ibu hamil di Indonesia mengalami anemia.<br><br>⚠️ <b>Bahaya Anemia pada Ibu Hamil:</b><br>• Bayi lahir prematur<br>• Berat bayi lahir rendah (BBLR)<br>• Bayi lahir dengan cadangan zat besi rendah<br>• Perdarahan saat persalinan lebih berbahaya<br>• Anemia pada bayi & anak<br>• Kematian ibu (pada kasus berat)<br><br>💊 <b>TTD untuk Ibu Hamil:</b><br>• Dosis: <b>1 tablet per hari</b> sejak trimester pertama<br>• Kandungan: 60 mg zat besi + 400 µg asam folat<br>• Minimal 90 tablet selama kehamilan<br><br>🥗 <b>Kebutuhan Zat Besi Ibu Hamil:</b><br>• Trimester 1: 26 mg/hari<br>• Trimester 2–3: 27 mg/hari<br><br>🌱 <b>Pencegahan Dimulai Sebelum Hamil:</b><br>Remaja putri yang anemia dan hamil akan menghadapi risiko sangat tinggi. Itulah mengapa mencegah anemia sejak remaja sangat penting!<br><br><i>⚠️ Jika kamu sedang hamil dan curiga anemia — segera ke bidan/dokter. Ini darurat kesehatan!</i>'
+  },
+  {
+    id: 'cacingan_anemia',
+    tags: ['cacingan','cacing','anemia cacingan','hubungan cacingan anemia','anemia infeksi','parasit anemia','obat cacing','cacing tambang'],
+    answer: '🪱 <b>Cacingan & Anemia:</b><br><br>Infeksi cacing usus — terutama <b>cacing tambang (hookworm)</b> — adalah salah satu penyebab anemia yang sering diabaikan di Indonesia.<br><br>🔍 <b>Bagaimana Cacingan Menyebabkan Anemia?</b><br>• Cacing tambang menempel di usus dan menghisap darah<br>• Seekor cacing tambang bisa menghisap 0,2 mL darah per hari<br>• Infeksi berat = kehilangan banyak darah dari usus → anemia berat<br><br>⚠️ <b>Gejala Cacingan:</b><br>• Gatal di telapak kaki (masuk melalui kulit)<br>• Mual, diare<br>• Perut buncit pada anak<br>• Lemas, pucat (akibat anemia)<br>• Berat badan tidak naik<br><br>✅ <b>Pencegahan & Pengobatan:</b><br>• Selalu pakai alas kaki<br>• Cuci tangan sebelum makan<br>• Minum air matang<br>• Obat cacing (mebendazol / albendazol) setiap 6 bulan di daerah endemis<br>• Jaga kebersihan lingkungan<br><br><i>💊 Jika ada tanda cacingan, konsultasikan ke dokter untuk mendapat obat cacing yang tepat sebelum terapi anemia!</i>'
+  },
+
+  // ── MITOS & FAKTA ─────────────────────────────────────────────
+  {
+    id: 'mitos_anemia',
+    tags: ['mitos anemia','fakta anemia','benar tidak','mitos haid','fakta menstruasi','benarkah','apakah benar','anemia tidak berbahaya','anemia ringan tidak apa','mitos seputar anemia','hoaks anemia'],
+    answer: '🔍 <b>Mitos vs Fakta Anemia & Menstruasi:</b><br><br>❌ <b>MITOS: "Anemia ringan tidak berbahaya"</b><br>✅ <b>FAKTA:</b> Anemia ringan tetap menurunkan konsentrasi, prestasi, dan kekebalan tubuh. Harus ditangani!<br><br>❌ <b>MITOS: "Makan bayam sudah cukup untuk anemia"</b><br>✅ <b>FAKTA:</b> Zat besi bayam (non-heme) hanya terserap 2–8%. Harus dikombinasikan dengan vitamin C dan sumber besi heme.<br><br>❌ <b>MITOS: "TTD membuat gemuk"</b><br>✅ <b>FAKTA:</b> Zat besi tidak menyebabkan kegemukan. Ini mitos yang menyebabkan banyak remaja menolak TTD.<br><br>❌ <b>MITOS: "Anemia cukup diistirahatkan saja"</b><br>✅ <b>FAKTA:</b> Anemia memerlukan terapi spesifik (suplemen + perbaikan diet). Istirahat saja tidak akan meningkatkan kadar Hb.<br><br>❌ <b>MITOS: "Nyeri haid itu normal dan tidak perlu diobati"</b><br>✅ <b>FAKTA:</b> Nyeri haid ringan memang normal, tapi nyeri berat yang mengganggu aktivitas adalah tanda ada masalah medis.<br><br>❌ <b>MITOS: "Darah haid kotor dan harus keluar banyak"</b><br>✅ <b>FAKTA:</b> Darah haid adalah jaringan rahim normal. Volume > 80mL per siklus justru abnormal dan berisiko anemia.<br><br>❌ <b>MITOS: "Orang kurus pasti anemia, orang gemuk tidak"</b><br>✅ <b>FAKTA:</b> Anemia bisa terjadi pada siapa saja, termasuk orang dengan berat badan normal atau berlebih.'
+  },
+
+  // ── PERTANYAAN TENTANG KONDISI PRIBADI ───────────────────────
+  {
+    id: 'apakah_saya_anemia',
+    tags: ['apakah saya anemia','aku anemia tidak','kemungkinan anemia','tanda saya anemia','saya pucat','saya sering pusing','saya sering lelah','saya lemas terus','saya mungkin anemia','dugaan anemia'],
+    answer: function(u) {
+      var base = '🤔 <b>Apakah Kamu Anemia?</b><br><br>Aku tidak bisa memberikan diagnosis, tapi bisa membantu kamu mengenali tanda-tandanya.<br><br>🔍 <b>Coba Cek Secara Mandiri:</b><br>1. Tarik kelopak mata bawah — merah muda atau pucat?<br>2. Lihat telapak tangan — cerah atau pucat?<br>3. Cek bibir dan gusi — merah muda atau pucat?<br><br>📋 <b>Kamu Berisiko Anemia jika:</b><br>• Merasa lelah berat yang tidak wajar<br>• Pusing sering, terutama saat berdiri<br>• Terlihat pucat dibanding biasanya<br>• Menstruasi banyak atau lama<br>• Jarang makan makanan bergizi<br>• Tidak pernah minum TTD<br><br>';
+      if (lastSkriningResult) {
+        var r = lastSkriningResult;
+        base += '📊 <b>Berdasarkan hasil skriningmu: ' + r.kategori + ' (Skor ' + r.skor + '/21)</b><br>';
+        if (r.level === 'high') base += '⚠️ Skormu cukup tinggi. Sangat disarankan segera cek Hb ke puskesmas!<br><br>';
+        else if (r.level === 'medium') base += 'Ada beberapa hal yang perlu diperhatikan. Sebaiknya cek Hb ke puskesmas untuk memastikan.<br><br>';
+        else base += 'Risikomu tergolong rendah, tapi tetap rutin minum TTD dan makan bergizi ya!<br><br>';
+      }
+      base += '<i>✅ Satu-satunya cara pasti mengetahui anemia: <b>cek kadar Hb ke puskesmas</b>. Gratis dengan BPJS!</i>';
+      return base;
+    }
+  },
+  {
+    id: 'bbsikap_anemia',
+    tags: ['apa yang harus dilakukan','langkah pertama','mulai dari mana','apa yang perlu dilakukan','bagaimana cara','saran untuk saya','rekomendasi untuk saya'],
+    answer: function(u) {
+      var base = '📋 <b>Langkah yang Bisa Kamu Lakukan Sekarang:</b><br><br>';
+      if (lastSkriningResult) {
+        var r = lastSkriningResult;
+        if (r.level === 'high') {
+          base += '🚨 Berdasarkan skriningmu (<b>' + r.kategori + '</b>), ini yang perlu segera dilakukan:<br><br>1️⃣ <b>SEGERA</b> ke puskesmas untuk cek Hb<br>2️⃣ Ceritakan hasil skrining ini ke dokter/petugas kesehatan<br>3️⃣ Mulai minum TTD setiap hari (jangan tunggu!)<br>4️⃣ Perbanyak makan hati ayam, daging, bayam + jeruk<br>5️⃣ Istirahat cukup dan kurangi aktivitas berat sementara';
+        } else if (r.level === 'medium') {
+          base += '⚠️ Berdasarkan skriningmu (<b>' + r.kategori + '</b>):<br><br>1️⃣ Jadwalkan cek Hb di puskesmas dalam waktu dekat<br>2️⃣ Mulai minum TTD rutin 1x/minggu<br>3️⃣ Perbaiki pola makan — lebih banyak sumber zat besi<br>4️⃣ Hindari teh/kopi bersamaan dengan makan<br>5️⃣ Catat pola haid di fitur Siklus';
+        } else {
+          base += '✅ Berdasarkan skriningmu (<b>' + r.kategori + '</b>) — bagus! Pertahankan dengan:<br><br>1️⃣ Tetap minum TTD rutin 1x/minggu<br>2️⃣ Pertahankan pola makan bergizi<br>3️⃣ Pantau siklus haid secara rutin<br>4️⃣ Cek Hb 6 bulan sekali<br>5️⃣ Lakukan skrining ulang setiap 3 bulan';
+        }
+      } else {
+        base += '1️⃣ Lakukan <b>Skrining Anemia</b> di menu Skrining (jika belum)<br>2️⃣ <b>Cek Hb</b> ke puskesmas terdekat (gratis BPJS)<br>3️⃣ Mulai minum <b>TTD rutin</b> 1x per minggu<br>4️⃣ Perbaiki pola makan — perbanyak zat besi<br>5️⃣ Catat siklus haid di fitur Siklus<br>6️⃣ Pasang <b>pengingat TTD</b> di HP';
+      }
+      return base + '<br><br><i>💪 Satu langkah kecil hari ini berdampak besar untuk kesehatanmu!</i>';
+    }
+  }
+];
+
+// ── Mesin Pencarian Cerdas ────────────────────────────────────
+function normalize(str) {
+  return str.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function tokenize(str) {
+  return normalize(str).split(' ').filter(function(w){ return w.length > 1; });
+}
+
+function scoreEntry(query, entry) {
+  var q = normalize(query);
+  var tokens = tokenize(query);
+  var score = 0;
+
+  entry.tags.forEach(function(tag) {
+    var t = normalize(tag);
+    // Exact phrase match — highest score
+    if (q.includes(t)) score += t.split(' ').length * 10;
+    // Partial token match
+    else {
+      var tagTokens = tokenize(tag);
+      tagTokens.forEach(function(tt) {
+        tokens.forEach(function(qt) {
+          if (qt === tt) score += 4;
+          else if (tt.includes(qt) && qt.length > 3) score += 2;
+          else if (qt.includes(tt) && tt.length > 3) score += 1;
+        });
+      });
+    }
+  });
+  return score;
+}
+
+function findBestAnswer(text) {
+  // Sapaan & basa-basi langsung
+  var t = normalize(text);
+  if (/^(halo|hai|hi|hey|hei|hello|assalamualaikum|selamat pagi|selamat siang|selamat malam)/.test(t)) {
+    return resolveAnswer(AIDB.find(function(e){ return e.id === 'salam'; }), text);
+  }
+  if (/^(terima kasih|makasih|thanks|thank|thx|tq|trims)/.test(t)) {
+    return resolveAnswer(AIDB.find(function(e){ return e.id === 'terimakasih'; }), text);
+  }
+  if (/^(oke|ok|baik|iya|ya |ngerti|paham|sip|mantap)/.test(t)) {
+    return resolveAnswer(AIDB.find(function(e){ return e.id === 'bagus'; }), text);
+  }
+
+  var best = null, bestScore = 0;
+  AIDB.forEach(function(entry) {
+    var s = scoreEntry(text, entry);
+    if (s > bestScore) { bestScore = s; best = entry; }
+  });
+
+  if (bestScore >= 4 && best) return resolveAnswer(best, text);
+
+  // Fallback umum
+  return '🤔 Maaf, aku belum memiliki informasi spesifik untuk pertanyaan itu.<br><br>Kamu bisa tanyakan hal-hal seperti:<br>• <i>"Apa itu anemia?"</i><br>• <i>"Gejala anemia apa saja?"</i><br>• <i>"Makanan apa yang baik untuk anemia?"</i><br>• <i>"Cara minum TTD yang benar?"</i><br>• <i>"Kenapa haid saya banyak?"</i><br>• <i>"Kapan harus ke dokter?"</i><br><br><i>Atau konsultasikan langsung ke dokter/bidan di puskesmas terdekat ya! 🏥</i>';
+}
+
+function resolveAnswer(entry, text) {
+  if (!entry) return null;
+  if (typeof entry.answer === 'function') return entry.answer(text);
+  return entry.answer;
+}
+
+async function sendChatMessage(text) {
+  if (aiIsTyping) return;
+  aiIsTyping = true;
+  document.getElementById('quick-questions').style.display = 'none';
+  updateAIResultBanner();
+  addUserMessage(text);
+  chatHistory.push({ role: 'user', content: text });
+  var sendBtn = document.getElementById('chat-send-btn');
+  if (sendBtn) sendBtn.disabled = true;
+  showTyping();
+
+  var delay = 600 + Math.min(text.length * 12, 1800);
+  await new Promise(function(r){ setTimeout(r, delay); });
+
+  removeTyping();
+  var reply = findBestAnswer(text);
+  chatHistory.push({ role: 'assistant', content: reply });
+  addBotMessage(reply);
+
+  aiIsTyping = false;
+  if (sendBtn) sendBtn.disabled = false;
+}
+
+function formatMarkdown(text) {
+  text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+  text = text.replace(/\*(.*?)\*/g, '<i>$1</i>');
+  text = text.replace(/\n\n/g, '<br><br>');
+  text = text.replace(/\n/g, '<br>');
+  text = text.replace(/<br>- /g, '<br>• ');
+  text = text.replace(/^- /g, '• ');
+  return text;
+}
+</script>
+</body>
+</html>
